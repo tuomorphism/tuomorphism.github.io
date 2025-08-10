@@ -1,0 +1,78 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import Header from '~/components/widgets/Header.astro';
+import { getCollection } from 'astro:content';
+import { headerData } from '~/navigation'
+
+const projects = await getCollection('projects');
+const ordered = [...projects].sort((a, b) => {
+  if (a.data.tier !== b.data.tier) return a.data.tier - b.data.tier;
+  return a.data.title.localeCompare(b.data.title);
+});
+---
+<Layout>
+  <Fragment slot="header"></Fragment>
+  <Fragment slot="announcement"></Fragment>
+    <Header {...headerData}
+      isSticky
+      showToggleTheme
+    />
+        <section class="py-12">
+            <div class="mx-auto max-w-7xl px-4">
+                <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {ordered.map((p, idx) => (
+                        <article
+                        class="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm hover:shadow-md transition-shadow"
+                        >
+          {p.data.image && (
+              <img
+              src={p.data.image}
+              alt={p.data.title}
+              class="h-48 w-full object-cover rounded-t-xl"
+              />
+            )}
+          <div class="flex flex-col flex-1 p-6">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
+              {p.data.title}
+            </h3>
+            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+              {p.data.description}
+            </p>
+            <div class="mt-auto pt-4 flex gap-3 flex-wrap">
+              {p.data.links?.map((link) => (
+                  <a
+                  href={link.url}
+                  class="text-sm font-medium text-indigo-600 hover:underline"
+                  >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+            {p.data.blog_posts && p.data.blog_posts.length > 0 && (
+              <div class="mt-4">
+                <input type="checkbox" id={`blog-toggle-${idx}`} class="peer hidden" />
+                <label
+                  for={`blog-toggle-${idx}`}
+                  class="text-sm font-medium text-indigo-600 hover:underline cursor-pointer"
+                >
+                  {`Show related blog posts (${p.data.blog_posts.length})`}
+                </label>
+                <div class="max-h-0 overflow-hidden peer-checked:max-h-screen transition-all duration-300 mt-2 space-y-1">
+                  {p.data.blog_posts.map((bp) => (
+                    <a
+                      href={bp.url}
+                      class="block text-sm text-zinc-700 dark:text-zinc-300 hover:underline"
+                    >
+                      {bp.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+</div>
+</section>
+</Layout>
