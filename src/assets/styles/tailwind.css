@@ -85,6 +85,12 @@
   @apply rotate-45 translate-y-[-8px] translate-x-[14px];
 }
 
+/* Override the intersect classes */
+.intersect-once, .intersect-quarter {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* To deprecated */
 
 .dd *:first-child {
