@@ -3,16 +3,16 @@ import { getPermalink } from './utils/permalinks';
 export const headerData = {
   links: [
     {
+      text: 'About',
+      href: getPermalink('/')
+    },
+    {
       text: 'Projects',
       href: getPermalink('/projects')
     },
     {
       text: 'Blog',
       href: getPermalink('/blog')
-    },
-    {
-      text: 'CV',
-      href: getPermalink('/cv')
     },
   ],
 };

@@ -1,15 +1,15 @@
 site:
   name: Tuomorphism
-  site: 'https://astrowind.vercel.app'
+  site: 'https://tuomorphism.github.io'
   base: '/'
   trailingSlash: false
 
 # Default SEO metadata
 metadata:
   title:
-    default: AstroWind
-    template: '%s — AstroWind'
-  description: "\U0001F680 Suitable for Startups, Small Business, Sass Websites, Professional Portfolios, Marketing Websites, Landing Pages & Blogs."
+    default: Tuomorphism
+    template: '%s — Tuomorphism'
+  description: ""
   robots:
     index: true
     follow: true
@@ -60,11 +60,6 @@ apps:
 
     isRelatedPostsEnabled: true
     relatedPostsCount: 4
-
-analytics:
-  vendors:
-    googleAnalytics:
-      id: null # or "G-XXXXXXXXXX"
 
 ui:
   theme: 'system' # Values: "system" | "light" | "dark" | "light:only" | "dark:only"
