@@ -1,6 +1,11 @@
 # build output
 dist/
 .output/
+external/
+
+# generated content
+src/content/post/*
+src/content/projects/*
 
 # dependencies
 node_modules/

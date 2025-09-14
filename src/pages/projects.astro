@@ -10,9 +10,14 @@ const ordered = [...projects].sort((a, b) => {
   if (a.data.tier !== b.data.tier) return a.data.tier - b.data.tier;
   return a.data.title.localeCompare(b.data.title);
 });
+
+const metadata = {
+  title: 'Projects'
+}
+
 ---
 
-<Layout>
+<Layout metadata={metadata}>
   <Fragment slot="header"></Fragment>
   <Header {...headerData} isSticky showToggleTheme />
 
@@ -26,11 +31,11 @@ const ordered = [...projects].sort((a, b) => {
   />
 
   <!-- Project grid with consistent section spacing -->
-  <section class="bg-zinc-50 dark:bg-zinc-950">
+  <section>
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {ordered.map((p, idx) => (
-          <article class="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm hover:shadow-md transition-shadow">
+          <article class="flex flex-col rounded-s border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm hover:shadow-md transition-shadow">
             {p.data.image && (
               <img
                 src={p.data.image}

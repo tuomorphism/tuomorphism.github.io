@@ -1,0 +1,26 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import BlogList from '~/components/blog/List.astro';
+import { fetchPosts, blogListRobots } from '~/utils/blog';
+
+export const prerender = true;
+
+const posts = await fetchPosts(); // already returns normalized Post[]
+---
+
+<Layout title="Blog" robots={blogListRobots}>
+  <Hero
+    title="Blog"
+    tagline="Latest posts"
+    align="left"
+    maxW="max-w-5xl"
+    showDivider={true}
+  />
+
+  <section>
+    <div class="mx-auto max-w-4xl px-6 sm:px-6 py-8 sm:py-12">
+      <BlogList posts={posts} />
+    </div>
+  </section>
+</Layout>

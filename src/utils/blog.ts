@@ -57,7 +57,7 @@ const getNormalizedPost = async (post: CollectionEntry<'post'>): Promise<Post> =
     metadata = {},
   } = data;
 
-  const slug = cleanSlug(id); // cleanSlug(rawSlug.split('/').pop());
+  const slug = data.slug || ''; // cleanSlug(rawSlug.split('/').pop());
   const publishDate = new Date(rawPublishDate);
   const updateDate = rawUpdateDate ? new Date(rawUpdateDate) : undefined;
 
@@ -182,16 +182,15 @@ export const getStaticPathsBlogList = async ({ paginate }: { paginate: PaginateF
   });
 };
 
-/** */
-export const getStaticPathsBlogPost = async () => {
+export async function getStaticPathsBlogPost() {
   if (!isBlogEnabled || !isBlogPostRouteEnabled) return [];
-  return (await fetchPosts()).flatMap((post) => ({
-    params: {
-      blog: post.permalink,
-    },
-    props: { post },
+  const posts = await getCollection('post', ({ data }) => !data.draft);
+
+  return posts.map((entry) => ({
+    params: { blog: `blog/${entry.slug}` }, // for `[...blog].astro`
+    props: { post: entry },                  // <-- full entry, not entry.data
   }));
-};
+}
 
 /** */
 export const getStaticPathsBlogCategory = async ({ paginate }: { paginate: PaginateFunction }) => {

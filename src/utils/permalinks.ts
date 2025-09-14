@@ -73,10 +73,26 @@ export const getPermalink = (slug = '', type = 'page'): string => {
       permalink = createPath(TAG_BASE, trimSlash(slug));
       break;
 
-    case 'post':
-      permalink = createPath(trimSlash(slug));
-      break;
+    case 'post': {
+      // Accept either a plain string or a permalink-like string and normalize it
+      const raw =
+        typeof slug === 'string' ? slug : String(slug ?? '');
 
+      // Remove domain, leading slashes, optional 'blog/' prefix, and trailing -md/.md
+      const normalized = raw
+        .replace(/^https?:\/\/[^/]+/, '') // drop domain if present
+        .replace(/^\/+/, '')              // drop leading slashes
+        .replace(/^blog\//, '')           // drop leading blog/ if present
+        .replace(/(\.md|-md)$/, '');      // drop .md or -md suffix
+
+      // Ensure posts live under BLOG_BASE (falls back to 'blog' if empty)
+      const base = BLOG_BASE || 'blog';
+
+      // Slugify each segment and build /blog/<slug>
+      const finalSlug = cleanSlug(normalized);
+      permalink = createPath(base, finalSlug);
+      break;
+    }
     case 'page':
     default:
       permalink = createPath(slug);

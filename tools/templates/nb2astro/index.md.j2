@@ -1,0 +1,13 @@
+{%- extends 'markdown/index.md.j2' -%}
+{%- block header -%}
+---
+title: "{{ resources.metadata.get('title', 'Untitled') }}"
+excerpt: "{{ resources.metadata.get('excerpt', '') }}"
+publishDate: {{ resources.metadata.get('publishDate', '') }}
+{%- if resources.metadata.get('updateDate') %}
+updateDate: {{ resources.metadata.get('updateDate') }}
+{%- endif %}
+draft: {{ resources.metadata.get('draft', False) }}
+tags: {{ resources.metadata.get('tags', []) | tojson }}
+---
+{%- endblock header -%}

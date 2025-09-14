@@ -1,4 +1,4 @@
-name: Deploy website to GitHub Pages
+name: Deploy site to Github Pages.
 
 on:
   push:
@@ -19,13 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # If you prefer pnpm or yarn, set package-manager below.
       - uses: withastro/action@v2
         with:
           node-version: 20
           package-manager: npm
-          # path: .   # (optional) if your project is in a subfolder
 
   deploy:
     needs: build

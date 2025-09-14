@@ -1,0 +1,4 @@
+repos:
+  - name: diffusion-on-the-edge
+    url: https://github.com/tuomorphism/diffusion-on-the-edge
+    ref: main

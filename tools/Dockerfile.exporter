@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1.6
+FROM python:3.11-slim
+
+# Minimal system deps for nbconvert + images
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    libfreetype6 \
+    libpng16-16 \
+    fonts-dejavu \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /site
+
+# Install Python deps for the exporter
+COPY requirements.txt /site/requirements.txt
+RUN pip install --no-cache-dir -r /site/requirements.txt
+
+# Copy only the tools (cache-friendly)
+COPY tools /site/tools
+
+# Default entrypoint: run the exporter
+ENTRYPOINT ["python", "tools/export_all.py"]
