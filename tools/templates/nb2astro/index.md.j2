@@ -1,4 +1,5 @@
-{%- extends 'markdown/index.md.j2' -%}
+{% extends 'markdown/index.md.j2' %}
+
 {%- block header -%}
 ---
 title: "{{ resources.metadata.get('title', 'Untitled') }}"
@@ -11,3 +12,42 @@ draft: {{ resources.metadata.get('draft', False) }}
 tags: {{ resources.metadata.get('tags', []) | tojson }}
 ---
 {%- endblock header -%}
+
+{# ==========================
+   OUTPUT CUSTOMIZATION
+   Use HTML <pre><code> instead of fenced code so that stray ``` in outputs
+   never break the whole document.
+   ========================== #}
+
+{%- block traceback_line -%}
+<pre><code class="language-output">{{ line | trim | e }}</code></pre>
+{%- endblock traceback_line -%}
+
+{%- block stream -%}
+<pre><code class="language-output">{{ output.text | trim | e }}</code></pre>
+{%- endblock stream -%}
+
+{%- block error -%}
+<pre><code class="language-output">{{ (output.ename ~ ': ' ~ output.evalue) | e }}
+{%- for line in output.traceback -%}
+{{ line | trim | e }}
+{%- endfor %}</code></pre>
+{%- endblock error -%}
+
+{%- block execute_result -%}
+{%- if 'text/plain' in output.data -%}
+<pre><code class="language-output">{{ output.data['text/plain'] | trim | e }}</code></pre>
+{%- else -%}
+{{ super() }}
+{%- endif -%}
+{%- endblock execute_result -%}
+
+{%- block display_data -%}
+{%- if 'text/plain' in output.data and output.data|length == 1 -%}
+<pre><code class="language-output">{{ output.data['text/plain'] | trim | e }}</code></pre>
+{%- else -%}
+<div class="nb-output">
+{{ super() }}  {# keep default rendering & asset extraction #}
+</div>
+{%- endif -%}
+{%- endblock display_data -%}

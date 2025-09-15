@@ -96,3 +96,30 @@
 .dd *:first-child {
   margin-top: 0;
 }
+
+/* CODE BLOCKS */
+/* Inputs (normal code blocks) */
+.prose pre:not(:has(code.language-output)) {
+  @apply bg-neutral-900 text-neutral-100 border border-neutral-800 rounded-xl p-4 shadow-sm;
+}
+
+/* Outputs (fences like ```output) */
+.prose pre:has(code.language-output) {
+  @apply bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-lg p-3;
+}
+
+/* Optional labels */
+.prose pre:has(code.language-output)::before {
+  content: "Output";
+  @apply block text-[11px] uppercase tracking-wide text-neutral-500 mb-1;
+}
+.prose pre:not(:has(code.language-output))::before {
+  content: "Code";
+  @apply block text-[11px] uppercase tracking-wide text-neutral-400 mb-1;
+}
+
+/* If you also emit non-code rich outputs (HTML, images) */
+.prose .nb-output {
+  @apply bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-lg p-3 my-4;
+}
+.prose .nb-output img { @apply rounded-md; }

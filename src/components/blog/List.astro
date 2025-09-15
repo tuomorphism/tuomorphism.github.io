@@ -9,12 +9,12 @@ export interface Props {
 const { posts } = Astro.props;
 ---
 
-<ul>
-  {
-    posts.map((post) => (
-      <li class="mb-12 md:mb-20">
+<section class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+  <ul class="space-y-4 md:space-y-5">
+    {posts.map((post) => (
+      <li class="m-0">
         <Item post={post} />
       </li>
-    ))
-  }
-</ul>
+    ))}
+  </ul>
+</section>

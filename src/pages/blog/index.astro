@@ -2,18 +2,22 @@
 import Layout from '~/layouts/PageLayout.astro';
 import Hero from '~/components/widgets/Hero.astro';
 import BlogList from '~/components/blog/List.astro';
-import { fetchPosts, blogListRobots } from '~/utils/blog';
+import { fetchPosts } from '~/utils/blog';
 
 export const prerender = true;
 
 const posts = await fetchPosts(); // already returns normalized Post[]
+const metadata = {
+  title: 'Blog'
+}
 ---
 
-<Layout title="Blog" robots={blogListRobots}>
+<Layout metadata={metadata}>
   <Hero
     title="Blog"
-    tagline="Latest posts"
+    subtitle="Latest posts"
     align="left"
+    size="sm"
     maxW="max-w-5xl"
     showDivider={true}
   />
