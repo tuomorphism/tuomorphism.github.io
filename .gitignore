@@ -1,11 +1,9 @@
 # build output
 dist/
 .output/
-external/
 
-# generated content
-src/content/post/*
-src/content/projects/*
+# content script output
+external/
 
 # dependencies
 node_modules/
@@ -25,5 +23,9 @@ pnpm-debug.log*
 .DS_Store
 
 pnpm-lock.yaml
-
 .astro
+
+# Python/nbconvert noise
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

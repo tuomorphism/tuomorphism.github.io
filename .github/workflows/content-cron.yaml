@@ -1,0 +1,59 @@
+# .github/workflows/content-cron.yml
+name: Nightly Content Export (Docker)
+
+on:
+  schedule:
+    - cron: '30 0 * * *'   # 00:30 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: content-export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build exporter image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/Dockerfile.exporter
+          load: true
+          tags: content-export:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run exporter (container)
+        run: |
+          docker run --rm \
+            -e EXTERNAL_GIT_PAT="${{ secrets.EXTERNAL_GIT_PAT }}" \
+            -v "${{ github.workspace }}:/site" \
+            --entrypoint bash \
+            content-export:local \
+            -lc '
+              if [ -n "$EXTERNAL_GIT_PAT" ]; then
+                git config --global url."https://$EXTERNAL_GIT_PAT:@github.com/".insteadOf "https://github.com/"
+              fi
+              python tools/export_all.py
+            '
+
+      - name: Create PR with updates
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(content): nightly export"
+          title: "Content: nightly export"
+          branch: chore/content-nightly
+          delete-branch: true
+          add-paths: |
+            src/content/**
+            external/** 
