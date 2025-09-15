@@ -1,5 +1,4 @@
-# .github/workflows/content-cron.yml
-name: Nightly Content Export (Docker)
+name: Content exporter from project repositories.
 
 on:
   schedule:
@@ -39,10 +38,23 @@ jobs:
 
       - name: Run exporter (container)
         run: |
+          uid="$(id -u)"
+          gid="$(id -g)"
           docker run --rm \
+            -u "${uid}:${gid}" \
+            -e HOME=/tmp \
             -e EXTERNAL_GIT_PAT="${{ secrets.EXTERNAL_GIT_PAT }}" \
             -v "${{ github.workspace }}:/site" \
-            content-export:local
+            --entrypoint bash \
+            content-export:local \
+            -lc '
+              if [ -n "$EXTERNAL_GIT_PAT" ]; then
+                git config --global url."https://$EXTERNAL_GIT_PAT:@github.com/".insteadOf "https://github.com/"
+              fi
+              umask 002
+              python tools/export_all.py
+            '
+
 
       - name: Commit & push changes (if any)
         run: |
