@@ -56,4 +56,3 @@ jobs:
           delete-branch: true
           add-paths: |
             src/content/**
-            external/** 
