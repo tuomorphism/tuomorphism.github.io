@@ -1,0 +1,16 @@
+---
+import ProjectLink from './ProjectLink.astro';
+
+type Link = { title?: string; url: string };
+
+interface Props {
+  links?: Link[];
+}
+const { links = [] } = Astro.props as Props;
+---
+
+{links.length > 0 && (
+  <div class="flex shrink-0 items-center gap-2">
+    {links.map((l) => <ProjectLink link={l} />)}
+  </div>
+)}

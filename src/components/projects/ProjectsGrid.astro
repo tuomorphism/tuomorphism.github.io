@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ProjectCard from './ProjectCard.astro';
+
+interface Props {
+  items: CollectionEntry<'projects'>[];
+  previewCount?: number;
+}
+const { items, previewCount = 2 } = Astro.props as Props;
+---
+
+<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  {items.map((project, idx) => (
+    <div class="h-full">
+      <ProjectCard project={project} uid={`${idx}-${project.id}`} previewCount={previewCount} />
+    </div>
+  ))}
+</div>

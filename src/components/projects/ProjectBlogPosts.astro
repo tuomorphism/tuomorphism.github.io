@@ -1,0 +1,39 @@
+---
+type BlogPost = { title: string; url: string };
+
+interface Props {
+  posts?: BlogPost[];
+  title?: string; // section label
+}
+const { posts = [], title = 'Related posts' } = Astro.props as Props;
+
+// Shorten titles like "diffusion-on-the-edge: 02 Maximal_Learning" → "Maximal Learning"
+const shortLabel = (t: string) => {
+  let s = t;
+  if (s.includes(':')) s = s.split(':').slice(1).join(':'); // text after first colon
+  s = s.replace(/^[\s]*0*\d+[\.\-_:]?\s*/, '');             // drop leading numbers like "02 "
+  s = s.replace(/_/g, ' ').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : t.trim();
+};
+
+const items = posts.map((p) => ({ ...p, label: shortLabel(p.title) }));
+---
+
+{items.length > 0 && (
+  <section class="p-4 sm:p-5">
+    <!-- small label on its own line -->
+    <div class="text-[11px] uppercase tracking-[0.08em] text-zinc-500 dark:text-zinc-400">
+      {title}
+    </div>
+
+    <!-- emphasized but tasteful inline links that wrap to new lines -->
+    <p class="mt-1 text-base/6 font-medium text-zinc-900 dark:text-zinc-100">
+      {items.map((bp, i) => (
+        <>
+          <a href={bp.url} class="hover:underline underline-offset-4">{bp.label}</a>
+          {i < items.length - 1 && <span class="text-zinc-400">, </span>}
+        </>
+      ))}
+    </p>
+  </section>
+)}

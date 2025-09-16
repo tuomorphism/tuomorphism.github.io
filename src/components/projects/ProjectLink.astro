@@ -1,0 +1,33 @@
+---
+import { Icon } from 'astro-icon/components';
+
+type Link = { title?: string; url: string };
+interface Props { link: Link }
+const { link } = Astro.props as Props;
+
+const t = (link.title ?? '').toLowerCase().trim();
+const isCode = ['code', 'repo', 'repository', 'source', 'git'].includes(t);
+const isDemo = ['demo', 'live', 'play', 'try', 'site'].includes(t);
+
+const btn =
+  'inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 transition';
+---
+
+{isCode ? (
+  <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label="Source" title="Source" class={btn}>
+    <Icon name="lucide:file-code-2" class="h-4 w-4" />
+    <span class="sr-only">Source</span>
+  </a>
+) : isDemo ? (
+  <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label="Live demo" title="Live demo" class={btn}>
+    <Icon name="lucide:play" class="h-4 w-4" />
+    <span class="sr-only">Demo</span>
+  </a>
+) : (
+  <a href={link.url} target="_blank" rel="noopener noreferrer"
+     class="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium
+            border-zinc-200 text-zinc-700 hover:bg-zinc-50
+            dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">
+    {link.title}
+  </a>
+)}
