@@ -5,19 +5,15 @@ import Content from '~/components/widgets/Content.astro';
 import { headerData } from '~/navigation'
 import { getPermalink } from '~/utils/permalinks';
 
-const metadata = {
-  title: 'About',
-};
+const metadata = { title: 'About' };
 ---
 
 <Layout metadata={metadata}>
   <Fragment slot="announcement"></Fragment>
   <Fragment slot="header">
-    <Header {...headerData}
-      isSticky
-      showToggleTheme
-    />
+    <Header {...headerData} isSticky showToggleTheme />
   </Fragment>
+
   <Content
     columns={2}
     items={[
@@ -25,25 +21,23 @@ const metadata = {
         callToAction: {
           text: 'Projects',
           href: getPermalink('projects'),
+          icon: 'lucide:folder-kanban',
         },
       },
       {
         callToAction: {
           text: 'Blog',
           href: getPermalink('blog'),
+          icon: 'lucide:newspaper',
         },
       },
     ]}
   >
     <Fragment slot="content">
       <h5 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Hi!</h5>
-      <p>
-        I like building things and exploring the intersection of statistics, math, and computer science. 
-      </p>
+      <p>I like building things and exploring the intersection of statistics, math, and computer science.</p>
       <br />
-      <p>  
-        My recent interests are the combination of computational geometry and machine learning, computer vision and differential geometry.
-      </p>
+      <p>My recent interests are the combination of computational geometry and machine learning, computer vision and differential geometry.</p>
     </Fragment>
   </Content>
 </Layout>
