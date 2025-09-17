@@ -6,9 +6,8 @@ import ProjectBlogPosts from './ProjectBlogPosts.astro';
 interface Props {
   project: CollectionEntry<'projects'>;
   uid: string;
-  previewCount?: number;
 }
-const { project, uid, previewCount = 2 } = Astro.props as Props;
+const { project } = Astro.props as Props;
 const data = project.data;
 ---
 
@@ -40,7 +39,7 @@ const data = project.data;
 
     <!-- Blog posts -->
     <div class="min-w-0">
-      <ProjectBlogPosts posts={data.blog_posts} uid={uid} previewCount={previewCount} />
+      <ProjectBlogPosts posts={data.blog_posts} />
     </div>
   </div>
 </article>

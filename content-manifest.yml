@@ -2,3 +2,6 @@ repos:
   - name: diffusion-on-the-edge
     url: https://github.com/tuomorphism/diffusion-on-the-edge
     ref: main
+  - name: autonomous-drone-nav
+    url: https://github.com/tuomorphism/autonomous-drone-nav
+    ref: main

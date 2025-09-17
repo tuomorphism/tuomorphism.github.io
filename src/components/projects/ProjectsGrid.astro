@@ -6,13 +6,13 @@ interface Props {
   items: CollectionEntry<'projects'>[];
   previewCount?: number;
 }
-const { items, previewCount = 2 } = Astro.props as Props;
+const { items } = Astro.props as Props;
 ---
 
 <div class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
   {items.map((project, idx) => (
     <div class="h-full min-w-0">
-      <ProjectCard project={project} uid={`${idx}-${project.id}`} previewCount={previewCount} />
+      <ProjectCard project={project} uid={`${idx}-${project.id}`} />
     </div>
   ))}
 </div>

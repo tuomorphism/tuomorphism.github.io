@@ -25,34 +25,43 @@ POST_OUT = ROOT / "src" / "content" / "post"
 PROJ_OUT = ROOT / "src" / "content" / "projects"
 TEMPLATE_DIR = ROOT / "tools" / "templates"
 
+
 def run(cmd, cwd=None):
     print("+", " ".join(cmd), "[cwd=" + str(cwd or ROOT) + "]")
     subprocess.check_call(cmd, cwd=str(cwd) if cwd else None)
 
+
 _slug_re = re.compile(r"[^a-z0-9-]+")
+
 def slugify(s: str) -> str:
     return re.sub(r"-{2,}", "-", _slug_re.sub("-", s.lower()).strip("-"))
+
 
 def natural_key(s: str):
     # "2" < "10", case-insensitive, preserves path segments
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)]
+
 
 def read_yaml(path: pathlib.Path) -> Dict[str, Any]:
     if path.exists():
         return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return {}
 
+
 def content_hash(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
 
 def summarize(text: str, max_chars=200) -> str:
     t = text.strip().splitlines()[0] if text.strip() else ""
     t = t.strip()
     return (t[: max_chars - 1] + "…") if len(t) > max_chars else t
 
+
 def yaml_frontmatter_block(data: Dict[str, Any]) -> str:
     dumped = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).rstrip()
     return f"---\n{dumped}\n---\n\n"
+
 
 def parse_frontmatter(text: str) -> Tuple[Optional[Dict[str, Any]], str]:
     s = text.lstrip()
@@ -73,6 +82,7 @@ def parse_frontmatter(text: str) -> Tuple[Optional[Dict[str, Any]], str]:
     fm = yaml.safe_load(fm_text) or {}
     return fm, body
 
+
 def ensure_frontslug_in_frontmatter(md_path: pathlib.Path, slug: str) -> None:
     """Ensure 'frontSlug' exists (and old 'slug' is removed) in the frontmatter of md_path."""
     if not md_path.exists():
@@ -88,11 +98,13 @@ def ensure_frontslug_in_frontmatter(md_path: pathlib.Path, slug: str) -> None:
         fm["frontSlug"] = slug
         md_path.write_text(yaml_frontmatter_block(fm) + body, encoding="utf-8")
 
+
 # --- Git ---
-def clone_or_update(name: str, url: str, ref: str|None) -> pathlib.Path:
+
+def clone_or_update(name: str, url: str, ref: str | None) -> pathlib.Path:
     dest = EXTERNAL / name
     if dest.exists():
-        run(["git", "fetch", "origin"], cwd=dest)
+        run(["git", "fetch", "origin", "--prune"], cwd=dest)
         run(["git", "checkout", ref or "main"], cwd=dest)
         try:
             run(["git", "reset", "--hard", f"origin/{ref or 'main'}"], cwd=dest)
@@ -101,6 +113,7 @@ def clone_or_update(name: str, url: str, ref: str|None) -> pathlib.Path:
     else:
         run(["git", "clone", "--depth", "1", "--branch", ref or "main", url, str(dest)])
     return dest
+
 
 def git_last_commit_date(repo_root: pathlib.Path, path: pathlib.Path) -> Optional[date]:
     try:
@@ -113,8 +126,29 @@ def git_last_commit_date(repo_root: pathlib.Path, path: pathlib.Path) -> Optiona
     except subprocess.CalledProcessError:
         return None
 
+
 # --- Projects ---
-def make_project_card(repo_dir: pathlib.Path, blog_posts: Optional[List[Dict[str, str]]] = None) -> None:
+
+def _merge_and_dedupe_links(links: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Deduplicate by URL, preserve order, ensure each has a title."""
+    seen = set()
+    deduped: List[Dict[str, str]] = []
+    for li in links:
+        if not isinstance(li, dict):
+            continue
+        url = li.get("url")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        deduped.append({"title": li.get("title") or "Link", "url": url})
+    return deduped
+
+
+def make_project_card(
+    repo_dir: pathlib.Path,
+    repo_url: Optional[str],
+    blog_posts: Optional[List[Dict[str, str]]] = None
+) -> None:
     meta = read_yaml(repo_dir / "project.yml")
     title = meta.get("title") or repo_dir.name.replace("-", " ").title()
     slug = slugify(title)
@@ -126,9 +160,23 @@ def make_project_card(repo_dir: pathlib.Path, blog_posts: Optional[List[Dict[str
     image = meta.get("image") or meta.get("heroImage") or ""
     date_value = meta.get("date") or datetime.now().date()
 
-    links = []
-    if meta.get("repo_url"): links.append({"title": "Repository", "url": meta["repo_url"]})
-    if meta.get("demo_url"): links.append({"title": "Demo", "url": meta["demo_url"]})
+    # Build links: start with repo from manifest, then merge project.yml links
+    links: List[Dict[str, str]] = []
+    if repo_url:
+        links.append({"title": "Repo", "url": repo_url})
+
+    # Structured links array from project.yml
+    for li in meta.get("links", []) or []:
+        if isinstance(li, dict) and li.get("url"):
+            links.append({"title": li.get("title") or "Link", "url": li["url"]})
+
+    # Back-compat: legacy keys
+    if meta.get("repo_url"):
+        links.append({"title": "Repo", "url": meta["repo_url"]})
+    if meta.get("demo_url"):
+        links.append({"title": "Demo", "url": meta["demo_url"]})
+
+    links = _merge_and_dedupe_links(links)
 
     fm: Dict[str, Any] = {
         "title": title,
@@ -144,7 +192,9 @@ def make_project_card(repo_dir: pathlib.Path, blog_posts: Optional[List[Dict[str
     (out_dir / "index.md").write_text(yaml_frontmatter_block(fm), encoding="utf-8")
     print(f"✓ project card {slug}" + (" with blog_posts" if blog_posts else ""))
 
+
 # --- Posts ---
+
 def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pathlib.Path) -> Dict[str, Any]:
     slug = slugify(f"{repo_name}-{rel_key}")
     out_dir = POST_OUT / slug
@@ -196,6 +246,7 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
     print(f"✓ exported notebook {slug}")
     return {"title": title, "slug": slug, "publishDate": publish_date, "rel_key": rel_key}
 
+
 def export_markdown(md: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pathlib.Path) -> Dict[str, Any]:
     slug = slugify(f"{repo_name}-{rel_key}")
     out_dir = POST_OUT / slug
@@ -239,6 +290,7 @@ def export_markdown(md: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pa
 
     return {"title": title, "slug": slug, "publishDate": publishDate, "rel_key": rel_key}
 
+
 def update_prev_next(posts_sorted: List[Dict[str, Any]]) -> None:
     """Write prev/next objects into each post's frontmatter based on natural filename order."""
     for i, p in enumerate(posts_sorted):
@@ -271,8 +323,10 @@ def update_prev_next(posts_sorted: List[Dict[str, Any]]) -> None:
     if posts_sorted:
         print(f"✓ updated prev/next for {len(posts_sorted)} posts")
 
+
 # --- Orchestration ---
-def process_repo(name: str, url: str, ref: str|None) -> None:
+
+def process_repo(name: str, url: str, ref: str | None) -> None:
     repo_dir = clone_or_update(name, url, ref)
 
     posts_info: List[Dict[str, Any]] = []
@@ -299,8 +353,9 @@ def process_repo(name: str, url: str, ref: str|None) -> None:
     # Update prev/next pointers in each post
     update_prev_next(posts_info)
 
-    # Write project card with ordered blog_posts
-    make_project_card(repo_dir, blog_posts=blog_posts if blog_posts else None)
+    # Write project card with ordered blog_posts, always include repo link
+    make_project_card(repo_dir, url, blog_posts=blog_posts if blog_posts else None)
+
 
 def main():
     EXTERNAL.mkdir(exist_ok=True)
@@ -315,6 +370,7 @@ def main():
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
     for r in manifest.get("repos", []):
         process_repo(r["name"], r["url"], r.get("ref"))
+
 
 if __name__ == "__main__":
     main()
