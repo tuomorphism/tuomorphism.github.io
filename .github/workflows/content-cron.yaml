@@ -23,10 +23,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Compute vars
+        id: vars
+        run: |
+          ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+          echo "TS=$ts" >> "$GITHUB_ENV"
+          echo "BRANCH_NAME=chore/content-${ts}-r${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "PR_TITLE=Content: nightly export ${ts}" >> "$GITHUB_ENV"
+
       - name: Prepare PR branch from main
         run: |
           git fetch origin --prune
-          git checkout -B chore/content-nightly origin/main
+          git checkout -B "$BRANCH_NAME" origin/main
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -66,7 +74,7 @@ jobs:
           echo "== name-only diff vs HEAD =="
           git diff --name-only
 
-      - name: Commit & push changes (force-with-lease)
+      - name: Commit & push changes (unique branch)
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
@@ -74,51 +82,36 @@ jobs:
           git add -A src/content
           changed=false
           if ! git diff --staged --quiet; then
-            git commit -m "chore(content): nightly export"
-            git push --force-with-lease -u origin chore/content-nightly
+            git commit -m "chore(content): nightly export $TS"
+            git push -u origin "$BRANCH_NAME"
             changed=true
           else
-            # still push branch pointer so next step can compare against origin
-            git push --force-with-lease -u origin chore/content-nightly
             echo "No new changes this run."
           fi
           echo "changed=${changed}" >> "$GITHUB_OUTPUT"
 
-      - name: Check if branch is ahead of main
-        id: ahead
-        run: |
-          git fetch origin --prune
-          if git ls-remote --exit-code --heads origin chore/content-nightly >/dev/null 2>&1; then
-            # right count = commits only in branch vs main
-            ahead=$(git rev-list --left-right --count origin/main...origin/chore/content-nightly | awk '{print $2}')
-          else
-            ahead=0
-          fi
-          echo "Branch ahead by: $ahead commits"
-          echo "ahead=$ahead" >> "$GITHUB_OUTPUT"
-
       - name: Ensure PR exists / update (gh)
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh auth status || true
-
           git fetch origin --prune
-          ahead=$(git rev-list --left-right --count origin/main...origin/chore/content-nightly | awk '{print $2}')
-          echo "Branch ahead of main by: $ahead commit(s)"
-          if [ "$ahead" -eq 0 ]; then
-            echo "No differences vs main; skipping PR."
-            exit 0
-          fi
 
-          if gh pr view chore/content-nightly --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "PR already exists; nothing to create."
+          # If a PR for this unique branch already exists (e.g. re-run), don't recreate.
+          open_pr=$(gh pr list \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --jq '.[0].number' || true)
+
+          if [ -n "${open_pr:-}" ]; then
+            echo "Open PR #$open_pr already exists for $BRANCH_NAME; nothing to create."
           else
             gh pr create \
               --base main \
-              --head chore/content-nightly \
-              --title "Content: nightly export" \
+              --head "$BRANCH_NAME" \
+              --title "$PR_TITLE" \
               --body  "Automated nightly export of blog/projects content."
           fi
