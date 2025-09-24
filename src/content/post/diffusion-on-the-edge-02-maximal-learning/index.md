@@ -1,7 +1,7 @@
 ---
 title: 'diffusion-on-the-edge: 02 Maximal_Learning'
 excerpt: '# Diffusion on the edge - Part II: Maximal manifold exploration'
-publishDate: 2025-09-14
+publishDate: 2025-09-22
 draft: false
 tags: []
 frontSlug: diffusion-on-the-edge-02-maximal-learning
@@ -9,7 +9,6 @@ prev:
   title: 'diffusion-on-the-edge: 01 Introduction'
   url: /blog/diffusion-on-the-edge-01-introduction
 ---
-
 
 
 # Diffusion on the edge - Part II: Maximal manifold exploration
@@ -261,7 +260,7 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
 ```
 <pre><code class="language-output">0.9998793920914371
 -0.9854375947033431
-0.18288661797684305</code></pre><pre><code class="language-output">dict_keys([&#39;t&#39;, &#39;x0&#39;, &#39;xt&#39;, &#39;mean&#39;, &#39;var&#39;, &#39;score&#39;])</code></pre>
+0.18288661797684305</code></pre>
 
 ```python
 # Defining a model
@@ -275,7 +274,7 @@ config = TrainConfig(epochs=16, lr=0.01)
 train_result = train_scorenet(model, dataloader, cfg=config)
 train_result
 ```
-<pre><code class="language-output">Epoch 1/16: 100it [00:00, 879.89it/s, loss=7.57]</code></pre><pre><code class="language-output">Epoch 1: avg loss = 7.573209</code></pre><pre><code class="language-output">Epoch 2/16: 100it [00:00, 1135.00it/s, loss=5.8]</code></pre><pre><code class="language-output">Epoch 2: avg loss = 5.799601</code></pre><pre><code class="language-output">Epoch 3/16: 100it [00:00, 1137.90it/s, loss=5.16]</code></pre><pre><code class="language-output">Epoch 3: avg loss = 5.158976</code></pre><pre><code class="language-output">Epoch 4/16: 100it [00:00, 1120.81it/s, loss=4.92]</code></pre><pre><code class="language-output">Epoch 4: avg loss = 4.924901</code></pre><pre><code class="language-output">Epoch 5/16: 100it [00:00, 1134.49it/s, loss=5.01]</code></pre><pre><code class="language-output">Epoch 5: avg loss = 5.011137</code></pre><pre><code class="language-output">Epoch 6/16: 100it [00:00, 1115.66it/s, loss=5.08]</code></pre><pre><code class="language-output">Epoch 6: avg loss = 5.081344</code></pre><pre><code class="language-output">Epoch 7/16: 100it [00:00, 1122.79it/s, loss=5.07]</code></pre><pre><code class="language-output">Epoch 7: avg loss = 5.072366</code></pre><pre><code class="language-output">Epoch 8/16: 100it [00:00, 1134.62it/s, loss=4.61]</code></pre><pre><code class="language-output">Epoch 8: avg loss = 4.607092</code></pre><pre><code class="language-output">Epoch 9/16: 100it [00:00, 1131.10it/s, loss=4.54]</code></pre><pre><code class="language-output">Epoch 9: avg loss = 4.540181</code></pre><pre><code class="language-output">Epoch 10/16: 100it [00:00, 1130.16it/s, loss=4.75]</code></pre><pre><code class="language-output">Epoch 10: avg loss = 4.753385</code></pre><pre><code class="language-output">Epoch 11/16: 100it [00:00, 1121.56it/s, loss=4.61]</code></pre><pre><code class="language-output">Epoch 11: avg loss = 4.610772</code></pre><pre><code class="language-output">Epoch 12/16: 100it [00:00, 1131.31it/s, loss=4.78]</code></pre><pre><code class="language-output">Epoch 12: avg loss = 4.784706</code></pre><pre><code class="language-output">Epoch 13/16: 100it [00:00, 1127.73it/s, loss=4.44]</code></pre><pre><code class="language-output">Epoch 13: avg loss = 4.441202</code></pre><pre><code class="language-output">Epoch 14/16: 100it [00:00, 848.55it/s, loss=4.34]</code></pre><pre><code class="language-output">Epoch 14: avg loss = 4.340211</code></pre><pre><code class="language-output">Epoch 15/16: 100it [00:00, 1127.86it/s, loss=4.47]</code></pre><pre><code class="language-output">Epoch 15: avg loss = 4.468581</code></pre><pre><code class="language-output">Epoch 16/16: 100it [00:00, 1138.69it/s, loss=4.6]</code></pre><pre><code class="language-output">Epoch 16: avg loss = 4.601637</code></pre><pre><code class="language-output">{&#39;model&#39;: SimpleScoreNet(
+<pre><code class="language-output">Epoch 1/16: 100it [00:00, 759.58it/s, loss=7.83]</code></pre><pre><code class="language-output">Epoch 1: avg loss = 7.830328</code></pre><pre><code class="language-output">Epoch 2/16: 100it [00:00, 1150.25it/s, loss=5.34]</code></pre><pre><code class="language-output">Epoch 2: avg loss = 5.342859</code></pre><pre><code class="language-output">Epoch 3/16: 100it [00:00, 1159.68it/s, loss=5.53]</code></pre><pre><code class="language-output">Epoch 3: avg loss = 5.525895</code></pre><pre><code class="language-output">Epoch 4/16: 100it [00:00, 1143.07it/s, loss=4.93]</code></pre><pre><code class="language-output">Epoch 4: avg loss = 4.931618</code></pre><pre><code class="language-output">Epoch 5/16: 100it [00:00, 1029.09it/s, loss=4.99]</code></pre><pre><code class="language-output">Epoch 5: avg loss = 4.994329</code></pre><pre><code class="language-output">Epoch 6/16: 100it [00:00, 1148.09it/s, loss=4.55]</code></pre><pre><code class="language-output">Epoch 6: avg loss = 4.548662</code></pre><pre><code class="language-output">Epoch 7/16: 100it [00:00, 1062.65it/s, loss=4.94]</code></pre><pre><code class="language-output">Epoch 7: avg loss = 4.936409</code></pre><pre><code class="language-output">Epoch 8/16: 100it [00:00, 951.72it/s, loss=4.97]</code></pre><pre><code class="language-output">Epoch 8: avg loss = 4.972114</code></pre><pre><code class="language-output">Epoch 9/16: 100it [00:00, 939.83it/s, loss=4.73]</code></pre><pre><code class="language-output">Epoch 9: avg loss = 4.731289</code></pre><pre><code class="language-output">Epoch 10/16: 100it [00:00, 1114.70it/s, loss=4.79]</code></pre><pre><code class="language-output">Epoch 10: avg loss = 4.791698</code></pre><pre><code class="language-output">Epoch 11/16: 100it [00:00, 1135.82it/s, loss=4.97]</code></pre><pre><code class="language-output">Epoch 11: avg loss = 4.972397</code></pre><pre><code class="language-output">Epoch 12/16: 100it [00:00, 1151.11it/s, loss=4.64]</code></pre><pre><code class="language-output">Epoch 12: avg loss = 4.644979</code></pre><pre><code class="language-output">Epoch 13/16: 100it [00:00, 1158.08it/s, loss=4.45]</code></pre><pre><code class="language-output">Epoch 13: avg loss = 4.453648</code></pre><pre><code class="language-output">Epoch 14/16: 100it [00:00, 1150.83it/s, loss=4.57]</code></pre><pre><code class="language-output">Epoch 14: avg loss = 4.572547</code></pre><pre><code class="language-output">Epoch 15/16: 100it [00:00, 935.64it/s, loss=4.7]</code></pre><pre><code class="language-output">Epoch 15: avg loss = 4.696382</code></pre><pre><code class="language-output">Epoch 16/16: 100it [00:00, 1156.28it/s, loss=4.24]</code></pre><pre><code class="language-output">Epoch 16: avg loss = 4.243063</code></pre><pre><code class="language-output"></code></pre><pre><code class="language-output">{&#39;model&#39;: SimpleScoreNet(
    (time_emb): SinusoidalTimeEmbedding()
    (net): Sequential(
      (0): Linear(in_features=67, out_features=256, bias=True)
@@ -285,29 +284,29 @@ train_result
      (4): Linear(in_features=256, out_features=3, bias=True)
    )
  ),
- &#39;losses&#39;: [7.573208830356598,
-  5.799601106643677,
-  5.158975734710693,
-  4.924901328086853,
-  5.011137225627899,
-  5.081344237327576,
-  5.072366107702255,
-  4.607092332839966,
-  4.54018070936203,
-  4.753385338783264,
-  4.610771543979645,
-  4.784706213474274,
-  4.4412019515037535,
-  4.340211046934128,
-  4.468580951690674,
-  4.601637442111969]}</code></pre>
+ &#39;losses&#39;: [7.830328216552735,
+  5.342858655452728,
+  5.525895035266876,
+  4.931617774963379,
+  4.9943289160728455,
+  4.548661727905273,
+  4.936408575773239,
+  4.972113909721375,
+  4.731289139986038,
+  4.791697671413422,
+  4.972397174835205,
+  4.644979261159897,
+  4.453648480176926,
+  4.572547163963318,
+  4.696382029056549,
+  4.243063418865204]}</code></pre>
 ### Backwards sampling
 
 Now we have the model, we can sample backwards as in the introduction post.
 
 
 ```python
-from diffusion_on_the_edge.stochastics.backwards_stochastics import reverse_pc_sampler_torch
+from diffusion_on_the_edge.stochastics.sde_torch import reverse_pc_sampler_torch
 ```
 
 
@@ -418,12 +417,12 @@ valid_samples = samples[res["valid_mask"]]
 invalid_samples = samples[res["invalid_mask"]]
 ```
 <pre><code class="language-output">Total: 4096
-Valid: 3649 (89.09%)
-Invalid: 447 (10.91%)
+Valid: 3071 (74.98%)
+Invalid: 1025 (25.02%)
 Rejection reason counts:
-  Negative &lt;0: 19 (0.46%)
-  &gt;1: 173 (4.22%)
-  Triangle inequality fail: 293 (7.15%)</code></pre>
+  Negative &lt;0: 52 (1.27%)
+  &gt;1: 711 (17.36%)
+  Triangle inequality fail: 393 (9.59%)</code></pre>
 ### Original model conclusion
 
 Now we have a model with sufficient capability of generating valid triangles with some accuracy.  
@@ -564,8 +563,8 @@ tracker = TuningTracker(
 INNER_EPOCHS = 10
 OUTER_EPOCHS = 5
 
-beta = 0.9
-lambda_prox = 0.2
+beta = 2.0
+lambda_prox = 0.1
 
 BATCH_SIZE = 256
 DATASET_SIZE = 2 ** 10
@@ -668,69 +667,69 @@ for epoch in range(OUTER_EPOCHS):
 tracker.close()
 
 ```
-<pre><code class="language-output">[outer 0] generated 1024 samples | valid: 948 (0.926) | avg_margin: 0.3168 | min_margin: 0.0007
-[outer 0 | inner 0] loss 109.2895 | score 109.4584 | Δ/teach 0.049 | cos(-T,Δ) 0.182
-[outer 0 | inner 1] loss 120.6547 | score 120.8501 | Δ/teach 0.051 | cos(-T,Δ) 0.199
-[outer 0 | inner 2] loss 181.4434 | score 181.6182 | Δ/teach 0.048 | cos(-T,Δ) 0.170
-[outer 0 | inner 3] loss 67.4070 | score 67.6522 | Δ/teach 0.049 | cos(-T,Δ) 0.221
-[outer 0 | inner 4] loss 95.7018 | score 95.9214 | Δ/teach 0.052 | cos(-T,Δ) 0.204
-[outer 0 | inner 5] loss 3261.2801 | score 3261.5340 | Δ/teach 0.053 | cos(-T,Δ) 0.222
-[outer 0 | inner 6] loss 178.1331 | score 178.3406 | Δ/teach 0.053 | cos(-T,Δ) 0.177
-[outer 0 | inner 7] loss 84.7533 | score 84.9580 | Δ/teach 0.054 | cos(-T,Δ) 0.183
-[outer 0 | inner 8] loss 71.2042 | score 71.4049 | Δ/teach 0.053 | cos(-T,Δ) 0.187
-[outer 0 | inner 9] loss 75.5122 | score 75.7268 | Δ/teach 0.055 | cos(-T,Δ) 0.179
+<pre><code class="language-output">[outer 0] generated 1024 samples | valid: 915 (0.894) | avg_margin: 0.3254 | min_margin: 0.0032
+[outer 0 | inner 0] loss 75.3364 | score 74.9788 | Δ/teach 0.048 | cos(-T,Δ) -0.188
+[outer 0 | inner 1] loss 47.8426 | score 47.6741 | Δ/teach 0.048 | cos(-T,Δ) -0.089
+[outer 0 | inner 2] loss 57.0070 | score 56.8330 | Δ/teach 0.047 | cos(-T,Δ) -0.114
+[outer 0 | inner 3] loss 77.6935 | score 77.5492 | Δ/teach 0.046 | cos(-T,Δ) -0.081
+[outer 0 | inner 4] loss 64.4680 | score 64.3890 | Δ/teach 0.045 | cos(-T,Δ) -0.080
+[outer 0 | inner 5] loss 109.4115 | score 109.2825 | Δ/teach 0.044 | cos(-T,Δ) -0.101
+[outer 0 | inner 6] loss 90.9112 | score 90.8590 | Δ/teach 0.043 | cos(-T,Δ) -0.083
+[outer 0 | inner 7] loss 96.4659 | score 96.4069 | Δ/teach 0.041 | cos(-T,Δ) -0.071
+[outer 0 | inner 8] loss 62.1123 | score 62.0572 | Δ/teach 0.040 | cos(-T,Δ) -0.085
+[outer 0 | inner 9] loss 92.0802 | score 92.1195 | Δ/teach 0.041 | cos(-T,Δ) -0.022
 [outer 0] finished in 0.2s
 
-[outer 1] generated 1024 samples | valid: 954 (0.932) | avg_margin: 0.3182 | min_margin: 0.0014
-[outer 1 | inner 0] loss 75.1868 | score 75.5174 | Δ/teach 0.054 | cos(-T,Δ) 0.261
-[outer 1 | inner 1] loss 53.7530 | score 54.0573 | Δ/teach 0.057 | cos(-T,Δ) 0.268
-[outer 1 | inner 2] loss 146.8949 | score 147.1776 | Δ/teach 0.058 | cos(-T,Δ) 0.232
-[outer 1 | inner 3] loss 56.9842 | score 57.3694 | Δ/teach 0.059 | cos(-T,Δ) 0.301
-[outer 1 | inner 4] loss 68.4671 | score 68.7868 | Δ/teach 0.059 | cos(-T,Δ) 0.245
-[outer 1 | inner 5] loss 59.8128 | score 60.1504 | Δ/teach 0.061 | cos(-T,Δ) 0.256
-[outer 1 | inner 6] loss 86.3180 | score 86.6932 | Δ/teach 0.061 | cos(-T,Δ) 0.302
-[outer 1 | inner 7] loss 75.5671 | score 75.9349 | Δ/teach 0.062 | cos(-T,Δ) 0.257
-[outer 1 | inner 8] loss 184.5541 | score 184.8976 | Δ/teach 0.066 | cos(-T,Δ) 0.245
-[outer 1 | inner 9] loss 75.8815 | score 76.2638 | Δ/teach 0.066 | cos(-T,Δ) 0.274
+[outer 1] generated 1024 samples | valid: 914 (0.893) | avg_margin: 0.3349 | min_margin: 0.0017
+[outer 1 | inner 0] loss 111.8171 | score 111.9109 | Δ/teach 0.040 | cos(-T,Δ) 0.029
+[outer 1 | inner 1] loss 147.2040 | score 147.2956 | Δ/teach 0.038 | cos(-T,Δ) 0.016
+[outer 1 | inner 2] loss 53.5183 | score 53.5775 | Δ/teach 0.037 | cos(-T,Δ) -0.033
+[outer 1 | inner 3] loss 57.1927 | score 57.3150 | Δ/teach 0.037 | cos(-T,Δ) 0.036
+[outer 1 | inner 4] loss 66.4985 | score 66.6680 | Δ/teach 0.036 | cos(-T,Δ) 0.032
+[outer 1 | inner 5] loss 62.8910 | score 63.0378 | Δ/teach 0.036 | cos(-T,Δ) 0.028
+[outer 1 | inner 6] loss 90.8447 | score 91.0950 | Δ/teach 0.037 | cos(-T,Δ) 0.108
+[outer 1 | inner 7] loss 72.4647 | score 72.6791 | Δ/teach 0.036 | cos(-T,Δ) 0.075
+[outer 1 | inner 8] loss 50.8322 | score 51.1151 | Δ/teach 0.036 | cos(-T,Δ) 0.110
+[outer 1 | inner 9] loss 118.8565 | score 119.1559 | Δ/teach 0.035 | cos(-T,Δ) 0.125
 [outer 1] finished in 0.2s
 
-[outer 2] generated 1024 samples | valid: 944 (0.922) | avg_margin: 0.3145 | min_margin: 0.0017
-[outer 2 | inner 0] loss 68.1935 | score 68.5728 | Δ/teach 0.068 | cos(-T,Δ) 0.261
-[outer 2 | inner 1] loss 98.3530 | score 98.7291 | Δ/teach 0.068 | cos(-T,Δ) 0.217
-[outer 2 | inner 2] loss 83.9423 | score 84.3477 | Δ/teach 0.067 | cos(-T,Δ) 0.254
-[outer 2 | inner 3] loss 61.0351 | score 61.3878 | Δ/teach 0.071 | cos(-T,Δ) 0.226
-[outer 2 | inner 4] loss 167.9066 | score 168.3822 | Δ/teach 0.070 | cos(-T,Δ) 0.291
-[outer 2 | inner 5] loss 4421.3449 | score 4421.8132 | Δ/teach 0.071 | cos(-T,Δ) 0.302
-[outer 2 | inner 6] loss 92.8617 | score 93.3107 | Δ/teach 0.074 | cos(-T,Δ) 0.258
-[outer 2 | inner 7] loss 95.6676 | score 96.1734 | Δ/teach 0.074 | cos(-T,Δ) 0.278
-[outer 2 | inner 8] loss 59.3784 | score 59.9275 | Δ/teach 0.076 | cos(-T,Δ) 0.306
-[outer 2 | inner 9] loss 198.1792 | score 198.6822 | Δ/teach 0.081 | cos(-T,Δ) 0.289
+[outer 2] generated 1024 samples | valid: 925 (0.903) | avg_margin: 0.3378 | min_margin: 0.0020
+[outer 2 | inner 0] loss 116.3099 | score 116.6037 | Δ/teach 0.036 | cos(-T,Δ) 0.119
+[outer 2 | inner 1] loss 104.8938 | score 105.2262 | Δ/teach 0.034 | cos(-T,Δ) 0.134
+[outer 2 | inner 2] loss 61.1262 | score 61.4689 | Δ/teach 0.035 | cos(-T,Δ) 0.137
+[outer 2 | inner 3] loss 59.8318 | score 60.1655 | Δ/teach 0.036 | cos(-T,Δ) 0.145
+[outer 2 | inner 4] loss 46.1107 | score 46.5023 | Δ/teach 0.036 | cos(-T,Δ) 0.177
+[outer 2 | inner 5] loss 79.0668 | score 79.4865 | Δ/teach 0.037 | cos(-T,Δ) 0.188
+[outer 2 | inner 6] loss 67.8253 | score 68.2997 | Δ/teach 0.036 | cos(-T,Δ) 0.222
+[outer 2 | inner 7] loss 66.5515 | score 67.0554 | Δ/teach 0.037 | cos(-T,Δ) 0.237
+[outer 2 | inner 8] loss 65.0004 | score 65.5156 | Δ/teach 0.037 | cos(-T,Δ) 0.226
+[outer 2 | inner 9] loss 70.9778 | score 71.5730 | Δ/teach 0.038 | cos(-T,Δ) 0.269
 [outer 2] finished in 0.2s
 
-[outer 3] generated 1024 samples | valid: 958 (0.936) | avg_margin: 0.3175 | min_margin: 0.0004
-[outer 3 | inner 0] loss 71.0509 | score 71.5307 | Δ/teach 0.080 | cos(-T,Δ) 0.262
-[outer 3 | inner 1] loss 82.2140 | score 82.7121 | Δ/teach 0.081 | cos(-T,Δ) 0.267
-[outer 3 | inner 2] loss 64.2522 | score 64.8068 | Δ/teach 0.080 | cos(-T,Δ) 0.308
-[outer 3 | inner 3] loss 89.0944 | score 89.7000 | Δ/teach 0.087 | cos(-T,Δ) 0.325
-[outer 3 | inner 4] loss 99.3764 | score 99.8522 | Δ/teach 0.085 | cos(-T,Δ) 0.236
-[outer 3 | inner 5] loss 161.9822 | score 162.5326 | Δ/teach 0.088 | cos(-T,Δ) 0.285
-[outer 3 | inner 6] loss 81.9732 | score 82.5643 | Δ/teach 0.091 | cos(-T,Δ) 0.280
-[outer 3 | inner 7] loss 103.5279 | score 104.2052 | Δ/teach 0.089 | cos(-T,Δ) 0.319
-[outer 3 | inner 8] loss 46.5174 | score 47.0817 | Δ/teach 0.092 | cos(-T,Δ) 0.265
-[outer 3 | inner 9] loss 125.6873 | score 126.2952 | Δ/teach 0.099 | cos(-T,Δ) 0.275
+[outer 3] generated 1024 samples | valid: 931 (0.909) | avg_margin: 0.3389 | min_margin: 0.0023
+[outer 3 | inner 0] loss 49.6584 | score 50.3022 | Δ/teach 0.039 | cos(-T,Δ) 0.293
+[outer 3 | inner 1] loss 10285.3559 | score 10285.9953 | Δ/teach 0.040 | cos(-T,Δ) 0.284
+[outer 3 | inner 2] loss 149.8179 | score 150.4998 | Δ/teach 0.042 | cos(-T,Δ) 0.299
+[outer 3 | inner 3] loss 100.5030 | score 101.1551 | Δ/teach 0.042 | cos(-T,Δ) 0.273
+[outer 3 | inner 4] loss 85.1029 | score 85.8451 | Δ/teach 0.046 | cos(-T,Δ) 0.315
+[outer 3 | inner 5] loss 57.0285 | score 57.7741 | Δ/teach 0.044 | cos(-T,Δ) 0.305
+[outer 3 | inner 6] loss 51.9469 | score 52.7291 | Δ/teach 0.047 | cos(-T,Δ) 0.296
+[outer 3 | inner 7] loss 71.1497 | score 72.0449 | Δ/teach 0.047 | cos(-T,Δ) 0.340
+[outer 3 | inner 8] loss 75.0284 | score 75.9116 | Δ/teach 0.050 | cos(-T,Δ) 0.329
+[outer 3 | inner 9] loss 282.6117 | score 283.5334 | Δ/teach 0.051 | cos(-T,Δ) 0.335
 [outer 3] finished in 0.2s
 
-[outer 4] generated 1024 samples | valid: 951 (0.929) | avg_margin: 0.3136 | min_margin: 0.0004
-[outer 4 | inner 0] loss 66.4062 | score 67.0586 | Δ/teach 0.094 | cos(-T,Δ) 0.307
-[outer 4 | inner 1] loss 51.8262 | score 52.4801 | Δ/teach 0.095 | cos(-T,Δ) 0.280
-[outer 4 | inner 2] loss 84.7064 | score 85.3668 | Δ/teach 0.100 | cos(-T,Δ) 0.318
-[outer 4 | inner 3] loss 54.4968 | score 55.3075 | Δ/teach 0.098 | cos(-T,Δ) 0.326
-[outer 4 | inner 4] loss 74.2823 | score 74.9214 | Δ/teach 0.097 | cos(-T,Δ) 0.256
-[outer 4 | inner 5] loss 68.9124 | score 69.6215 | Δ/teach 0.105 | cos(-T,Δ) 0.300
-[outer 4 | inner 6] loss 66.7510 | score 67.4423 | Δ/teach 0.108 | cos(-T,Δ) 0.274
-[outer 4 | inner 7] loss 64.2319 | score 65.0362 | Δ/teach 0.108 | cos(-T,Δ) 0.318
-[outer 4 | inner 8] loss 98.7006 | score 99.4332 | Δ/teach 0.113 | cos(-T,Δ) 0.303
-[outer 4 | inner 9] loss 167.9313 | score 168.6994 | Δ/teach 0.109 | cos(-T,Δ) 0.293
+[outer 4] generated 1024 samples | valid: 941 (0.919) | avg_margin: 0.3381 | min_margin: 0.0003
+[outer 4 | inner 0] loss 115.8833 | score 116.8387 | Δ/teach 0.053 | cos(-T,Δ) 0.328
+[outer 4 | inner 1] loss 120.6335 | score 121.5945 | Δ/teach 0.055 | cos(-T,Δ) 0.332
+[outer 4 | inner 2] loss 990.7366 | score 991.8868 | Δ/teach 0.055 | cos(-T,Δ) 0.372
+[outer 4 | inner 3] loss 69.4827 | score 70.4927 | Δ/teach 0.057 | cos(-T,Δ) 0.334
+[outer 4 | inner 4] loss 55.1029 | score 56.1716 | Δ/teach 0.061 | cos(-T,Δ) 0.345
+[outer 4 | inner 5] loss 124.0169 | score 125.1270 | Δ/teach 0.063 | cos(-T,Δ) 0.354
+[outer 4 | inner 6] loss 68.0904 | score 69.1644 | Δ/teach 0.065 | cos(-T,Δ) 0.332
+[outer 4 | inner 7] loss 338.7432 | score 339.9741 | Δ/teach 0.064 | cos(-T,Δ) 0.364
+[outer 4 | inner 8] loss 118.7355 | score 120.0598 | Δ/teach 0.066 | cos(-T,Δ) 0.364
+[outer 4 | inner 9] loss 140.3055 | score 141.5391 | Δ/teach 0.070 | cos(-T,Δ) 0.345
 [outer 4] finished in 0.2s</code></pre>
 ## Fine-tuned model sampling
 
@@ -761,12 +760,12 @@ print_triangle_summary(res_tuned)
 valid_tuned_samples = samples_arr_tuned[res_tuned['valid_mask']]
 ```
 <pre><code class="language-output">Total: 1024
-Valid: 928 (90.62%)
-Invalid: 96 (9.38%)
+Valid: 762 (74.41%)
+Invalid: 262 (25.59%)
 Rejection reason counts:
-  Negative &lt;0: 4 (0.39%)
-  &gt;1: 30 (2.93%)
-  Triangle inequality fail: 69 (6.74%)</code></pre>
+  Negative &lt;0: 7 (0.68%)
+  &gt;1: 204 (19.92%)
+  Triangle inequality fail: 79 (7.71%)</code></pre>
 ### Visualization
 
 We have a nice proportion of valid triangles, we can visualize them in a similar way.  
@@ -776,12 +775,20 @@ The score fields themselves can also be visualized, noting how different the ori
 
 
 ```python
-def mapping_uv(triangles_normalized: np.ndarray, c_coeff:float = 1.0) -> np.ndarray:
+def mapping_uv(triangles_normalized: np.ndarray, c_coeff: float = 1.0) -> np.ndarray:
     triangles = (triangles_normalized + 1) / 2.0
     a, b, c = (triangles[:, 0], triangles[:, 1], triangles[:, 2])
     u = a / c
     v = b / c
     return np.column_stack([u, v, np.repeat(1, triangles.shape[0]) * c_coeff])
+
+def inverse_mapping_uv(uvc: np.ndarray, c_coeff: float = 1.0) -> np.ndarray:
+    u, v = uvc[:, 0], uvc[:, 1]
+    c = c_coeff * np.ones_like(u)
+    a = u * c
+    b = v * c
+    triangles = np.column_stack([a, b, c])
+    return 2.0 * triangles - 1.0 # Normalized
 ```
 
 
@@ -804,12 +811,117 @@ sns.scatterplot(x = uv_tuned_samples[:, 0], y = uv_tuned_samples[:, 1], alpha=0.
 
   
 </div>
+## Density approximation
+
 
 ```python
-
+from diffusion_on_the_edge.stochastics.sde_torch import pf_logp_from_x0
 ```
 
 
 ```python
-
+density_prior_variance = (sigma_coeff ** 2) / (2 * lambda_coeff) * (1 - np.exp(-2 * lambda_coeff * 1.0)) # T = 1.0
 ```
+
+
+```python
+def make_uv_heatmap_with_pfode(
+    score_model,
+    f_fn, g_fn,                    # your drift/diffusion f_fn(x,t), g_fn(t)
+    prior_variance,                 # your OU prior at T
+    u_range=(-1.0, 1.0), v_range=(-1.0, 1.0),
+    res=40, 
+    T=1.0, 
+    N=1000, 
+    n_probe=2,
+    c=1.0,
+    mask_fn=None,                  # e.g., triangle inequality in (u,v)
+):
+    import numpy as np, torch
+    us = np.linspace(*u_range, res)
+    vs = np.linspace(*v_range, res)
+    U, V = np.meshgrid(us, vs, indexing="xy")
+
+    # Map (u,v) -> (x,y,z) with z=c
+    xyz = np.stack([c*U.ravel(), c*V.ravel(), np.full(U.size, c)], axis=-1)
+    x0 = torch.tensor(xyz, dtype=torch.float32)
+
+    logp0 = pf_logp_from_x0(
+        x0, score_model, f_fn, g_fn, prior_variance,
+        T=T, N=N, n_probe=n_probe
+    ).detach().cpu().numpy().reshape(res, res)
+
+    # Optional: apply mask in UV-space
+    if mask_fn is not None:
+        M = mask_fn(U, V)   # boolean mask of shape (res,res)
+        logp0 = np.where(M, logp0, np.nan)
+
+    return logp0, us, vs
+```
+
+
+```python
+plotting_c = -0.01
+logp, _, _ = make_uv_heatmap_with_pfode(score_model, f_fn=f_fn_torch, g_fn=g_fn_torch, prior_variance=density_prior_variance, c = plotting_c)
+logp_student, _, _ = make_uv_heatmap_with_pfode(student_tuning, f_fn=f_fn_torch, g_fn=g_fn_torch, prior_variance=density_prior_variance, c = plotting_c)
+
+fig, ax = plt.subplots(1, 2, figsize=(12,6), constrained_layout=True)
+original_map = sns.heatmap(
+    logp,
+    ax=ax[0],
+    cbar=False,
+    mask=np.isnan(logp) if 'logp' in locals() else None,  # or mask=~mask
+    xticklabels=False, yticklabels=False  # turn off if res is large
+)
+ax[0].set_xlabel("u = x/z")
+ax[0].set_ylabel("v = y/z")
+ax[0].invert_yaxis()
+
+student_map = sns.heatmap(
+    logp_student,
+    ax=ax[1],
+    cbar=False,
+    mask=np.isnan(logp) if 'logp' in locals() else None,
+    xticklabels=False, 
+    yticklabels=False
+)
+ax[1].set_xlabel("u = x/z")
+ax[1].set_ylabel("v = y/z")
+ax[1].invert_yaxis()
+
+cbar = fig.colorbar(original_map.collections[0], ax=ax, location="right", shrink=0.9)
+cbar.set_label("$\\log p$")
+plt.show()
+```
+<div class="nb-output">
+
+
+    
+![png](output_43_0.png)
+    
+
+  
+</div>
+
+```python
+difference_map = logp_student - logp
+fig, ax = plt.subplots(figsize=(8, 6))
+
+sns.heatmap(
+    difference_map,
+    ax = ax,
+    xticklabels=False,
+    yticklabels=False
+)
+
+ax.invert_yaxis()
+```
+<div class="nb-output">
+
+
+    
+![png](output_44_0.png)
+    
+
+  
+</div>
