@@ -1,7 +1,7 @@
 ---
 title: 'diffusion-on-the-edge: 01 Introduction'
-excerpt: '# Diffusion model - forward pass'
-publishDate: 2025-09-14
+excerpt: '# Diffusion models - Introduction'
+publishDate: 2025-10-02
 draft: false
 tags: []
 frontSlug: diffusion-on-the-edge-01-introduction
@@ -12,15 +12,55 @@ next:
 
 
 
-
-
-
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch.nn as nn
+
+from diffusion_on_the_edge.stochastics.ou_process import generate_ou_trajectory, generate_ou_density
 ```
+
+# Diffusion models - Introduction
+
+Hi!
+
+This is a first part of a two-part series on diffusion models. Our end goal is to understand the paper __paper_name_here deeply, starting from the basic building blocks of diffusion models.
+
+This first introductory part guides you through the basic building blocks of diffusion models, starting from the continuous stochastic process. From there, we describe the mechanisms of reversing the process and show how neural networks are utilized in solving a backwards stochastic differential equation. Alongside solving the forward and backward stochastic differential equations, we show how the probability density flows from the initial configuration into the more evenly distributed end-state distribution. Analogous to the stochastic case, we also show how to reverse this probability flow using a learned model.
+
+The steps we will take in this blog post are:
+
+1. Review of stochastic processes
+2. Density flow
+3. Backwards stochastic process
+4. Inverting the density flow
+5. Implementing a score model
+6. Simple 2-dimensional example
+
+## Review of stochastic processes
+
+As a quick review, we define a stochastic process to be a process of real-valued random variables $X_t \in \mathbb{R}^d$, where $t \in [0, 1]$ and $d$ denotes the dimensionality of the random process. In practice and for visualization purposes, we usually deal with random processes in dimension $d = 1, 2$ or $3$. Also, let $p_t$ denote the probability density of $X_t$ at time $t$.
+
+An example of a stochastic process is geometric brownian motion, $dX_t = \sigma dW_t, \sigma \gt 0$, where $dW_t$ denotes the standard $d$-dimensional brownian noise. We often characterize a stochastic process as a stochastic differential equation, $dX_t = (\text{something })dt + (\text{something else })dW_t$, with a deterministic part describing the general trend, an a stochastic noise part which describes the deviation of that trend.
+
+The particular stochastic process which we utilize in this blog post is an Ornstein–Uhlenbeck process, also shortened as an OU process. An OU process has a form like
+
+$$
+dX_t = -\lambda dt + \sigma dW_t
+$$
+
+where $\lambda > 0$ and $\sigma > 0$ are simple constants.
+
+## Density flow
+
+An OU process has a nice equivalent formulation; the probability distribution of such a process, $p = p(x, t) = p_t(x)$, has to satisfy a particular equation. The equation is known as a Fokker-Planck equation, being a partial differential equation for the density function $p_t$.
+
+$$
+\frac{\partial}{\partial t} p = \lambda \frac{\partial}{\partial x} \left( x p \right) + \frac{\sigma^2}{2}\frac{\partial^2}{\partial x^2} p
+$$
+
+The density of such a process is solved analytically as a normal distribution, $p(x, t | x_0) = \mathcal{N}(\mu_t, \Sigma_t)$, where $\mu_t = x_0e^{-\lambda t}, \Sigma_t = \frac{\sigma^2}{2\lambda}(1 - e^{-2\lambda t})I_d$.
 
 
 ```python
@@ -40,7 +80,6 @@ def generate_example_dataset(n=5000, noise=0.01):
     second_radius = 0.5
     for theta in np.linspace(0, np.pi, int(N_circle // 2)):
         points.append([circle_radius * np.cos(theta) + 0.6, 0.2 + circle_radius * np.sin(theta)])
-        # second smaller half circle
         points.append([second_radius * np.cos(theta + np.pi) - 0.5, second_radius * np.sin(theta + np.pi) - 1.0])
 
     # Add Gaussian noise
@@ -66,7 +105,7 @@ plt.tight_layout()
 
 
     
-![png](output_4_0.png)
+![png](output_7_0.png)
     
 
   
@@ -201,7 +240,7 @@ sns.lineplot(y = distances, x = t_range).set(
 
 
     
-![png](output_11_0.png)
+![png](output_14_0.png)
     
 
   
@@ -257,7 +296,7 @@ plt.tight_layout()
 
 
     
-![png](output_17_0.png)
+![png](output_20_0.png)
     
 
   
@@ -605,7 +644,7 @@ plt.grid()
 
 
     
-![png](output_32_0.png)
+![png](output_35_0.png)
     
 
   
@@ -623,7 +662,7 @@ sns.histplot(trajectory[0, :, 1], binwidth=0.1)
 
 
     
-![png](output_34_1.png)
+![png](output_37_1.png)
     
 
   
@@ -636,7 +675,7 @@ sns.histplot(trajectory[-1, :, 1], binwidth=0.1)
 
 
     
-![png](output_35_1.png)
+![png](output_38_1.png)
     
 
   
