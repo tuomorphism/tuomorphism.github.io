@@ -1,24 +1,33 @@
 {% extends 'markdown/index.md.j2' %}
 
+{# -------- Minimal frontmatter (with frontSlug) -------- #}
 {%- block header -%}
 ---
 title: "{{ resources.metadata.get('title', 'Untitled') }}"
-excerpt: "{{ resources.metadata.get('excerpt', '') }}"
 publishDate: {{ resources.metadata.get('publishDate', '') }}
-{%- if resources.metadata.get('updateDate') %}
-updateDate: {{ resources.metadata.get('updateDate') }}
-{%- endif %}
-draft: {{ resources.metadata.get('draft', False) }}
-tags: {{ resources.metadata.get('tags', []) | tojson }}
+frontSlug: "{{ resources.metadata.get('frontSlug', '') }}"
 ---
 {%- endblock header -%}
 
-{# ==========================
-   OUTPUT CUSTOMIZATION
-   Use HTML <pre><code> instead of fenced code so that stray ``` in outputs
-   never break the whole document.
-   ========================== #}
+{# -------- Optional Table of Contents (no FM fields needed) -------- #}
+{%- block before_body -%}
+{%- set toc_items = resources.metadata.get('toc_items') -%}
+{%- if toc_items and toc_items|length > 0 -%}
+<nav class="toc">
+  <h2>Table of contents</h2>
+  <ul>
+    {%- for item in toc_items -%}
+    <li style="margin-left: {{ (item.level - 1) * 1.0 }}rem">
+      <a href="#{{ item.id }}">{{ item.text }}</a>
+    </li>
+    {%- endfor -%}
+  </ul>
+</nav>
+<hr/>
+{%- endif -%}
+{%- endblock before_body -%}
 
+{# -------- Output rendering (unchanged behavior) -------- #}
 {%- block traceback_line -%}
 <pre><code class="language-output">{{ line | trim | e }}</code></pre>
 {%- endblock traceback_line -%}
@@ -47,7 +56,7 @@ tags: {{ resources.metadata.get('tags', []) | tojson }}
 <pre><code class="language-output">{{ output.data['text/plain'] | trim | e }}</code></pre>
 {%- else -%}
 <div class="nb-output">
-{{ super() }}  {# keep default rendering & asset extraction #}
+  {{ super() }}  {# keep default rendering & asset extraction #}
 </div>
 {%- endif -%}
 {%- endblock display_data -%}
