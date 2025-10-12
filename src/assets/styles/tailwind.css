@@ -123,3 +123,12 @@
   @apply bg-neutral-50 text-neutral-800 border border-neutral-200 rounded-lg p-3 my-4;
 }
 .prose .nb-output img { @apply rounded-md; }
+
+/* e.g. src/styles/masonry.css or in a <style> block */
+.masonry-grid {
+  /* baseline row height for the grid's implicit rows */
+  --masonry-row: 8px;
+  display: grid;
+  grid-auto-rows: var(--masonry-row);
+  grid-auto-flow: dense; /* fills holes nicely */
+}
