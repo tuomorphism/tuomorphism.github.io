@@ -1,11 +1,12 @@
 ---
 title: Diffusion models - Introduction
-publishDate: 2025-10-15
+publishDate: '2025-10-15'
 frontSlug: diffusion-on-the-edge-01-introduction-notebook
 next:
   title: 'Diffusion on the edge - Part II: Maximal manifold exploration'
   url: /blog/diffusion-on-the-edge-02-maximal-learning
 ---
+
 
 
 ```python

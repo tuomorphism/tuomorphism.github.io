@@ -3,7 +3,7 @@ title: Diffusion On The Edge
 description: Exploration of maximal entropy for diffusion models
 tier: 1
 image: ''
-date: 2025-09-15
+date: '2025-09-15'
 links:
 - title: Repo
   url: https://github.com/tuomorphism/diffusion-on-the-edge
