@@ -5,7 +5,6 @@ import ProjectBlogPosts from './ProjectBlogPosts.astro';
 
 interface Props {
   project: CollectionEntry<'projects'>;
-  uid: string;
 }
 const { project } = Astro.props as Props;
 const data = project.data;
