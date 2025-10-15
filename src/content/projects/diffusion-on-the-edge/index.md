@@ -8,9 +8,9 @@ links:
 - title: Repo
   url: https://github.com/tuomorphism/diffusion-on-the-edge
 blog_posts:
-- title: 'diffusion-on-the-edge: 01 Introduction'
-  url: /blog/diffusion-on-the-edge-01-introduction
-- title: 'diffusion-on-the-edge: 02 Maximal_Learning'
+- title: Diffusion models - Introduction
+  url: /blog/diffusion-on-the-edge-01-introduction-notebook
+- title: 'Diffusion on the edge - Part II: Maximal manifold exploration'
   url: /blog/diffusion-on-the-edge-02-maximal-learning
 ---
 
