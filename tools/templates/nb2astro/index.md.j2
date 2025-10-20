@@ -9,25 +9,21 @@ frontSlug: "{{ resources.metadata.get('frontSlug', '') }}"
 ---
 {%- endblock header -%}
 
-{# -------- Optional Table of Contents (no FM fields needed) -------- #}
+{# -------- Table of Contents in pure Markdown (no raw HTML) -------- #}
 {%- block before_body -%}
 {%- set toc_items = resources.metadata.get('toc_items') -%}
 {%- if toc_items and toc_items|length > 0 -%}
-<nav class="toc">
-  <h2>Table of contents</h2>
-  <ul>
-    {%- for item in toc_items -%}
-    <li style="margin-left: {{ (item.level - 1) * 1.0 }}rem">
-      <a href="#{{ item.id }}">{{ item.text }}</a>
-    </li>
-    {%- endfor -%}
-  </ul>
-</nav>
-<hr/>
+**Table of contents**
+
+{%- for item in toc_items -%}
+{{ "-" * (item.level) }} [{{ item.text }}](#{{ item.id }})
+{%- endfor -%}
+
+---
 {%- endif -%}
 {%- endblock before_body -%}
 
-{# -------- Output rendering (unchanged behavior) -------- #}
+{# -------- Output rendering (keep defaults; no change) -------- #}
 {%- block traceback_line -%}
 <pre><code class="language-output">{{ line | trim | e }}</code></pre>
 {%- endblock traceback_line -%}

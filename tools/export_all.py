@@ -9,13 +9,14 @@ Robust notebook/markdown exporter for Astro collections.
 
 Key hardening:
 - Per-cell heading anchoring (no concat/split) with shared ID registry
-- Setext (===/---) → ATX conversion with inline <a id="…">
+- ATX + Setext headings → ATX with inline `{#id}` (no raw HTML anchors)
 - Code/math-safe mutations (fences + $…$/$$…$$)
 - Markdown attachments (attachment:foo.png) extracted to assets
 - Block HTML padded with blank lines
 - URL rewrite + local asset copying with hashed names
 - Deterministic names for nbconvert output blobs
-- YAML date quoting, CRLF normalization, nb validation
+- YAML date normalization to plain YYYY-MM-DD scalars
+- CRLF normalization, nb validation
 """
 
 from __future__ import annotations
@@ -76,6 +77,28 @@ def content_hash(path: pathlib.Path) -> str:
 def _norm_text(s: str) -> str:
     return s.replace('\r\n', '\n').replace('\r', '\n').lstrip('\ufeff')
 
+# --- Date normalization helpers (fixes quoted date strings)
+def _coerce_date_like(v):
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, date):
+        return v
+    if isinstance(v, str):
+        s = v.strip().strip('"').strip("'")
+        try:
+            return date.fromisoformat(s)
+        except ValueError:
+            return v
+    return v
+
+def normalize_frontmatter_dates(fm: Dict[str, Any], keys=("publishDate", "date", "updateDate")) -> Dict[str, Any]:
+    if not isinstance(fm, dict):
+        return fm
+    for k in keys:
+        if k in fm:
+            fm[k] = _coerce_date_like(fm[k])
+    return fm
+
 def yaml_frontmatter_block(data: Dict[str, Any]) -> str:
     def _fmt(v):
         if isinstance(v, datetime):
@@ -83,7 +106,9 @@ def yaml_frontmatter_block(data: Dict[str, Any]) -> str:
         if isinstance(v, date):
             return v.isoformat()
         return v
-    dumped = yaml.safe_dump({k:_fmt(v) for k,v in data.items()}, sort_keys=False, allow_unicode=True).rstrip()
+    # Ensure any date-like values are normalized before dumping
+    data = normalize_frontmatter_dates({k: _fmt(v) for k, v in data.items()})
+    dumped = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).rstrip()
     return f"---\n{dumped}\n---\n\n"
 
 def parse_frontmatter(text: str) -> Tuple[Optional[Dict[str, Any]], str]:
@@ -247,6 +272,7 @@ def slugify_heading(text: str) -> str:
     return s or "section"
 
 def add_ids_and_collect_toc_per_cell(md_text: str, used_ids: Dict[str, int], max_depth: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
+    """Add `{#id}` to headings (per cell) and collect ToC items."""
     toc: List[Dict[str, Any]] = []
 
     def unique_id(base: str) -> str:
@@ -254,7 +280,7 @@ def add_ids_and_collect_toc_per_cell(md_text: str, used_ids: Dict[str, int], max
         used_ids[base] = n + 1
         return base if n == 0 else f"{base}-{n}"
 
-    # First: Setext → ATX with inline anchor
+    # First: Setext → ATX with inline `{#id}`
     def _convert_setext(s: str) -> Tuple[str, List[Dict[str, Any]]]:
         local_toc: List[Dict[str, Any]] = []
         def _repl(m):
@@ -263,31 +289,38 @@ def add_ids_and_collect_toc_per_cell(md_text: str, used_ids: Dict[str, int], max
             hid = unique_id(slugify_heading(text))
             if level <= max_depth:
                 local_toc.append({"level": level, "text": text, "id": hid})
-            return f"{'#'*level} {text} <a id=\"{hid}\"></a>"
+            return f"{'#'*level} {text} {{#{hid}}}"
         return _SETEXT_RE.sub(_repl, s), local_toc
 
     text, toc_setext = _convert_setext(md_text)
     toc.extend(toc_setext)
 
-    # Then: ATX headings — add inline anchor if missing
+    # Then: ATX headings — append `{#id}` if missing
     def _inject_atx_ids(s: str) -> str:
         lines = s.splitlines()
         for i, line in enumerate(lines):
             m = _MD_HEADING.match(line)
-            if not m: continue
+            if not m:
+                continue
             level = len(m.group('hash'))
             head_txt = m.group('text').strip()
-            # if already has an id anchor, keep it
-            if head_txt.endswith('>') and ' id="' in head_txt:
+            # Already has an id like '{#...}'?
+            if re.search(r'\{\s*#[-a-z0-9]+?\s*\}\s*$', head_txt):
+                # still collect for ToC
+                if level <= max_depth:
+                    id_match = re.search(r'\{\s*#([-a-z0-9]+)\s*\}\s*$', head_txt)
+                    hid = id_match.group(1) if id_match else slugify_heading(re.sub(r'\s*\{#.*\}\s*$', '', head_txt))
+                    text_only = re.sub(r'\s*\{#.*\}\s*$', '', head_txt)
+                    toc.append({"level": level, "text": text_only, "id": hid})
                 continue
             hid = unique_id(slugify_heading(head_txt))
-            lines[i] = f"{'#'*level} {head_txt} <a id=\"{hid}\"></a>"
+            lines[i] = f"{'#'*level} {head_txt} {{#{hid}}}"
             if level <= max_depth:
                 toc.append({"level": level, "text": head_txt, "id": hid})
         return "\n".join(lines)
+
     text = _inject_atx_ids(text)
 
-    # normalize trailing newline
     if md_text.endswith("\n") and not text.endswith("\n"):
         text += "\n"
     return text, toc
@@ -371,6 +404,8 @@ def make_project_card(repo_dir: pathlib.Path, repo_url: Optional[str], blog_post
     if blog_posts:
         fm["blog_posts"] = blog_posts
 
+    fm = normalize_frontmatter_dates(fm, keys=("date",))
+
     (out_dir / "index.md").write_text(yaml_frontmatter_block(fm), encoding="utf-8")
     print(f"✓ project card {slug}" + (" with blog_posts" if blog_posts else ""))
 
@@ -407,10 +442,12 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
 
         # pad block HTML & add heading IDs (code/math safe)
         raw = map_noncode(raw, pad_block_html)
-        def _ids(s): 
+
+        def _ids(s):
             s2, toc_cell = add_ids_and_collect_toc_per_cell(s, used_ids, max_depth=MAX_TOC_DEPTH)
             if toc_cell: toc_items.extend(toc_cell)
             return s2
+
         raw = map_noncode_nonmath(raw, _ids)
 
         # light normalization (safe)
@@ -420,7 +457,7 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
 
     # Title: prefer nb.metadata.title then first H1
     first_h1 = None
-    h1_re = re.compile(r'^\s*#\s+(.+?)\s*(?:<a\b[^>]*>\s*</a>)?\s*$', re.MULTILINE)
+    h1_re = re.compile(r'^\s*#\s+(.+?)\s*(?:\{\s*#[-a-z0-9]+\s*\})?\s*$', re.MULTILINE)
     for cell in nb.cells:
         if cell.get("cell_type") != "markdown": continue
         m = h1_re.search(cell.get("source",""))
@@ -452,6 +489,20 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
         if new_name != name:
             body = body.replace(name, new_name)
 
+    # Normalize the frontmatter emitted by the Jinja template (fix quoted dates)
+    fm_rendered, body_md = parse_frontmatter(body)
+    if fm_rendered is None:
+        fm_rendered = {"title": title, "publishDate": publish_date, "frontSlug": slug, "toc_items": toc_items}
+    else:
+        # Ensure required keys exist
+        fm_rendered.setdefault("title", title)
+        fm_rendered.setdefault("publishDate", publish_date)
+        fm_rendered.setdefault("frontSlug", slug)
+        fm_rendered.setdefault("toc_items", toc_items)
+
+    fm_rendered = normalize_frontmatter_dates(fm_rendered)
+    body = yaml_frontmatter_block(fm_rendered) + body_md
+
     (out_dir / "index.md").write_text(body, encoding="utf-8")
     ensure_frontslug_in_frontmatter(out_dir / "index.md", slug)
 
@@ -477,7 +528,7 @@ def export_markdown(md: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pa
     toc_items: List[Dict[str, Any]] = []
 
     # rewrite/copy assets + html padding
-    body = rewrite_urls_and_copy_assets(body, base_dir, out_assets_dir)
+    body = rewrite_urls_and_copy_assets(body, base_dir, out_assets_dir) if fm is not None else rewrite_urls_and_copy_assets(text, base_dir, out_assets_dir)
     body = map_noncode(body, pad_block_html)
 
     # heading IDs (setext + atx)
@@ -502,6 +553,8 @@ def export_markdown(md: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pa
         fm.setdefault("title", title)
         fm.setdefault("publishDate", publishDate)
         fm["frontSlug"] = slug
+
+    fm = normalize_frontmatter_dates(fm)
 
     (out_dir / "index.md").write_text(yaml_frontmatter_block(fm) + body, encoding="utf-8")
     ensure_frontslug_in_frontmatter(out_dir / "index.md", slug)
@@ -535,6 +588,7 @@ def update_prev_next(posts_sorted: List[Dict[str, Any]]) -> None:
         else:
             fm.pop("next", None)
 
+        fm = normalize_frontmatter_dates(fm)  # keep any dates clean if present
         post_md.write_text(yaml_frontmatter_block(fm) + body, encoding="utf-8")
     if posts_sorted:
         print(f"✓ updated prev/next for {len(posts_sorted)} posts")
