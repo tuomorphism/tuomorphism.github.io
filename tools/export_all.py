@@ -28,6 +28,8 @@ import yaml
 import nbformat
 from nbformat.validator import validate
 from nbconvert import MarkdownExporter
+import copy
+from nbformat import NotebookNode
 
 # ---------- Paths
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -422,6 +424,8 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
     nb = nbformat.read(str(ipynb), as_version=4)
     validate(nb)
 
+    _filter_and_apply_visibility(nb)
+
     publish_date = git_last_commit_date(repo_dir, ipynb) or datetime.now().date()
 
     # Per-markdown-cell processing with shared heading ID registry
@@ -511,6 +515,81 @@ def export_notebook(ipynb: pathlib.Path, repo_name: str, rel_key: str, repo_dir:
     marker.touch()
     print(f"✓ exported notebook {slug}")
     return {"title": title, "slug": slug, "publishDate": publish_date, "rel_key": rel_key}
+
+
+# ---------- Cell visibility + emptiness helpers (fixed)
+
+_HIDDEN_INPUT_TAGS = {"hide-input", "remove-input", "hide_input", "remove_input"}
+_HIDDEN_OUTPUT_TAGS = {"hide-output", "remove-output", "hide_output", "remove_output"}
+_REMOVE_CELL_TAGS = {"remove-cell", "hide-cell", "remove_cell", "hide_cell"}
+
+def _tags(cell: NotebookNode) -> set:
+    md = getattr(cell, "metadata", {}) or {}
+    return set((md.get("tags") or []))
+
+def _is_markdown_effectively_empty(cell: NotebookNode) -> bool:
+    src = _norm_text(cell.get("source", "")).strip()
+    attachments = (cell.get("attachments") or {})
+    return (src == "") and (not attachments)
+
+def _is_code_effectively_empty(cell: NotebookNode) -> bool:
+    src = _norm_text(cell.get("source", "")).strip()
+    outputs = cell.get("outputs") or []
+    return (src == "") and (len(outputs) == 0)
+
+def _apply_hidden_flags(cell: NotebookNode) -> Optional[NotebookNode]:
+    """
+    Mutates a copy of the cell according to hidden metadata/tags.
+    Returns the cell, or None if it should be removed entirely.
+    """
+    c = copy.deepcopy(cell)  # preserve NotebookNode type
+    md = getattr(c, "metadata", None)
+    if md is None:
+        c.metadata = md = NotebookNode()
+
+    # jupyter UI flags
+    jup = md.get("jupyter") if isinstance(md.get("jupyter"), dict) else {}
+    tags = _tags(c)
+
+    # Remove entire cell?
+    if tags & _REMOVE_CELL_TAGS:
+        return None
+
+    # Hide input (keep outputs)
+    source_hidden = bool(jup.get("source_hidden")) or bool(tags & _HIDDEN_INPUT_TAGS) or bool(md.get("source_hidden"))
+    if source_hidden and c.get("cell_type") in {"code", "markdown"}:
+        if c.get("cell_type") == "markdown":
+            return None  # nothing to show
+        if c.get("cell_type") == "code":
+            c["source"] = ""
+
+    # Hide outputs
+    outputs_hidden = bool(jup.get("outputs_hidden")) or bool(tags & _HIDDEN_OUTPUT_TAGS) or bool(md.get("outputs_hidden"))
+    if outputs_hidden and c.get("cell_type") == "code":
+        c["outputs"] = []
+        c["execution_count"] = None
+
+    return c
+
+def _filter_and_apply_visibility(nbnode: NotebookNode) -> None:
+    """Apply visibility rules and drop empty cells. Mutates nbnode in place."""
+    new_cells = []
+    for cell in nbnode.cells:
+        cell2 = _apply_hidden_flags(cell)  # returns NotebookNode or None
+        if cell2 is None:
+            continue
+
+        if cell2.get("cell_type") == "markdown":
+            if _is_markdown_effectively_empty(cell2):
+                continue
+        elif cell2.get("cell_type") == "code":
+            # if input was hidden, we may still keep outputs; drop only when truly empty
+            if _is_code_effectively_empty(cell2):
+                continue
+
+        new_cells.append(cell2)
+
+    nbnode.cells = new_cells
 
 def export_markdown(md: pathlib.Path, repo_name: str, rel_key: str, repo_dir: pathlib.Path) -> Dict[str, Any]:
     slug = slugify(f"{repo_name}-{rel_key}")
