@@ -20,6 +20,7 @@ prev:
 
 
 
+
 <a id="diffusion-on-the-edge-part-ii-maximal-manifold-exploration"></a>
 # Diffusion on the edge - Part II: Maximal manifold exploration
 
