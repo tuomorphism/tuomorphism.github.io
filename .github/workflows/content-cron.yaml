@@ -1,4 +1,4 @@
-name: Content exporter
+name: Content export
 
 on:
   schedule:
@@ -17,6 +17,10 @@ jobs:
   export:
     runs-on: ubuntu-latest
 
+    env:
+      # 👇 Add more space-separated folder names here to include them in the authoritative export
+      CONTENT_FOLDERS: "posts projects"
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -25,9 +29,10 @@ jobs:
 
       - name: Init vars
         run: |
-          echo "TS=$(date -u +'%Y%m%dT%H%M%SZ')" >> "$GITHUB_ENV"
+          TS="$(date -u +'%Y%m%dT%H%M%SZ')"
+          echo "TS=$TS" >> "$GITHUB_ENV"
           echo "BRANCH_NAME=chore/content-auto" >> "$GITHUB_ENV"
-          echo "PR_TITLE=Content: nightly export $(date -u +'%Y%m%dT%H%M%SZ')" >> "$GITHUB_ENV"
+          echo "PR_TITLE=Content: nightly export $TS" >> "$GITHUB_ENV"
 
       - name: Detect existing open PR
         id: detect_pr
@@ -75,6 +80,7 @@ jobs:
             -u "${uid}:${gid}" \
             -e HOME=/tmp \
             -e EXTERNAL_GIT_PAT="${{ secrets.EXTERNAL_GIT_PAT }}" \
+            -e CONTENT_FOLDERS="${CONTENT_FOLDERS}" \
             -v "${{ github.workspace }}:/site" \
             --entrypoint bash \
             content-export:local \
@@ -86,10 +92,16 @@ jobs:
               umask 002
               rm -rf /tmp/content && mkdir -p /tmp/content
               python tools/export_all.py --out /tmp/content
-              # Authoritative mirror without rsync:
-              rm -rf /site/src/content
-              mkdir -p /site/src/content
-              cp -a /tmp/content/. /site/src/content/
+
+              CONTENT_ROOT="/site/src/content"
+              for d in ${CONTENT_FOLDERS}; do
+                echo "Syncing authoritative folder: $d"
+                rm -rf "${CONTENT_ROOT}/${d}"
+                mkdir -p "${CONTENT_ROOT}/${d}"
+                if [ -d "/tmp/content/${d}" ]; then
+                  cp -a "/tmp/content/${d}/." "${CONTENT_ROOT}/${d}/"
+                fi
+              done
             '
 
       - name: Commit & push changes
@@ -98,14 +110,16 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A src/content
+
+          # Stage only the authoritative content folders
+          git add -A $(for d in $CONTENT_FOLDERS; do echo "src/content/$d"; done)
 
           if git diff --staged --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git commit -m "chore(content): nightly export $TS"
+          git commit -m "chore(content): nightly export $TS (${CONTENT_FOLDERS})"
 
           if ! git push -u origin "$BRANCH_NAME" --force-with-lease; then
             git fetch origin "$BRANCH_NAME"
@@ -131,5 +145,5 @@ jobs:
               --base main \
               --head "$BRANCH_NAME" \
               --title "$PR_TITLE" \
-              --body "Automated content sync from authoritative exporter (deletions included)."
+              --body "Automated content sync from authoritative exporter (${CONTENT_FOLDERS}; deletions included)."
           fi
