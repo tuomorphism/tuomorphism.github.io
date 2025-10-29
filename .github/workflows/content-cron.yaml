@@ -1,4 +1,4 @@
-name: Export content to site from project repositories
+name: Content exporter
 
 on:
   schedule:
@@ -23,31 +23,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Compute vars
-        id: vars
+      - name: Init vars
         run: |
-          ts="$(date -u +'%Y%m%dT%H%M%SZ')"
-          echo "TS=$ts" >> "$GITHUB_ENV"
+          echo "TS=$(date -u +'%Y%m%dT%H%M%SZ')" >> "$GITHUB_ENV"
           echo "BRANCH_NAME=chore/content-auto" >> "$GITHUB_ENV"
-          echo "PR_TITLE=Content: nightly export ${ts}" >> "$GITHUB_ENV"
+          echo "PR_TITLE=Content: nightly export $(date -u +'%Y%m%dT%H%M%SZ')" >> "$GITHUB_ENV"
 
-      - name: Detect existing open PR for content branch
+      - name: Detect existing open PR
         id: detect_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
           git fetch origin --prune
-          # Does an open PR from BRANCH_NAME -> main exist?
-          open_pr="$(gh pr list \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --jq '.[0].number' || true)"
+          open_pr="$(gh pr list --base main --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' || true)"
           if [ -n "${open_pr:-}" ]; then
-            echo "OPEN_PR_NUMBER=$open_pr" >> "$GITHUB_ENV"
             echo "PR_OPEN=true" >> "$GITHUB_ENV"
+            echo "OPEN_PR_NUMBER=$open_pr" >> "$GITHUB_ENV"
           else
             echo "PR_OPEN=false" >> "$GITHUB_ENV"
           fi
@@ -55,17 +46,11 @@ jobs:
       - name: Prepare branch
         run: |
           set -euo pipefail
+          git fetch origin --prune
           if [ "${PR_OPEN}" = "true" ]; then
-            echo "Open PR exists (#${OPEN_PR_NUMBER}); reusing branch ${BRANCH_NAME}."
-            # Ensure local branch tracks the remote and is up to date
-            git fetch origin "$BRANCH_NAME:$BRANCH_NAME"
-            git checkout "$BRANCH_NAME"
-            # Optionally bring in latest main to minimize future merge conflicts
-            git fetch origin main
+            git checkout -B "$BRANCH_NAME" "origin/$BRANCH_NAME"
             git merge --no-edit --strategy-option theirs origin/main || true
           else
-            echo "No open PR; recreating ${BRANCH_NAME} from origin/main."
-            git fetch origin --prune
             git checkout -B "$BRANCH_NAME" origin/main
           fi
 
@@ -82,8 +67,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run exporter (container as host UID/GID)
+      - name: Run exporter (authoritative mirror)
         run: |
+          set -euo pipefail
           uid="$(id -u)"; gid="$(id -g)"
           docker run --rm \
             -u "${uid}:${gid}" \
@@ -93,19 +79,15 @@ jobs:
             --entrypoint bash \
             content-export:local \
             -lc '
-              if [ -n "$EXTERNAL_GIT_PAT" ]; then
+              set -euo pipefail
+              if [ -n "${EXTERNAL_GIT_PAT:-}" ]; then
                 git config --global url."https://$EXTERNAL_GIT_PAT:@github.com/".insteadOf "https://github.com/"
               fi
               umask 002
-              python tools/export_all.py
+              rm -rf /tmp/content && mkdir -p /tmp/content
+              python tools/export_all.py --out /tmp/content
+              rsync -a --delete /tmp/content/ /site/src/content/
             '
-
-      - name: Show diff (debug)
-        run: |
-          echo "== git status =="
-          git status --porcelain
-          echo "== name-only diff vs HEAD =="
-          git diff --name-only
 
       - name: Commit & push changes
         id: commit
@@ -114,31 +96,37 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A src/content
-          changed=false
-          if ! git diff --staged --quiet; then
-            git commit -m "chore(content): nightly export $TS"
-            # If the branch did not exist remotely (new PR case), this sets upstream. If it did, just updates it.
-            git push -u origin "$BRANCH_NAME"
-            changed=true
-          else
-            echo "No new changes this run."
-          fi
-          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure PR exists / update (gh)
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "chore(content): nightly export $TS"
+
+          if ! git push -u origin "$BRANCH_NAME" --force-with-lease; then
+            git fetch origin "$BRANCH_NAME"
+            if ! git rebase "origin/$BRANCH_NAME"; then
+              git rebase --abort || true
+              git merge --no-edit --strategy-option ours "origin/$BRANCH_NAME"
+            fi
+            git push -u origin "$BRANCH_NAME" --force-with-lease
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure PR exists / update
         if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if [ "${PR_OPEN}" = "true" ]; then
-            echo "PR already open (#${OPEN_PR_NUMBER}); updating title."
             gh pr edit "${OPEN_PR_NUMBER}" --title "$PR_TITLE"
           else
-            echo "Creating new PR from ${BRANCH_NAME} -> main."
             gh pr create \
               --base main \
               --head "$BRANCH_NAME" \
               --title "$PR_TITLE" \
-              --body  "Automated nightly export of blog/projects content."
+              --body "Automated content sync from authoritative exporter (deletions included)."
           fi
