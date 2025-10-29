@@ -86,7 +86,10 @@ jobs:
               umask 002
               rm -rf /tmp/content && mkdir -p /tmp/content
               python tools/export_all.py --out /tmp/content
-              rsync -a --delete /tmp/content/ /site/src/content/
+              # Authoritative mirror without rsync:
+              rm -rf /site/src/content
+              mkdir -p /site/src/content
+              cp -a /tmp/content/. /site/src/content/
             '
 
       - name: Commit & push changes
