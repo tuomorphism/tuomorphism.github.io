@@ -3,7 +3,12 @@ name: Export content
 on:
   schedule:
     - cron: '30 0 * * *'   # 00:30 UTC nightly
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      always_pr:
+        description: "Create/keep a PR even when there are no content changes (adds a tiny .keep file)."
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -20,6 +25,8 @@ jobs:
     env:
       BRANCH_NAME: chore/content-auto
       CONTENT_FOLDERS: "post projects"
+      REPO: ${{ github.repository }}
+      ALWAYS_PR: ${{ inputs.always_pr }}
 
     steps:
       - name: Checkout repo
@@ -37,7 +44,6 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin --prune
-          # Recreate (or create) the branch at origin/main every run
           git checkout -B "$BRANCH_NAME" origin/main
 
       - name: Set up Docker Buildx
@@ -54,13 +60,15 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run exporter (authoritative mirror for selected folders)
+        env:
+          EXTERNAL_GIT_PAT: ${{ secrets.EXTERNAL_GIT_PAT }}
         run: |
           set -euo pipefail
           uid="$(id -u)"; gid="$(id -g)"
           docker run --rm \
             -u "${uid}:${gid}" \
             -e HOME=/tmp \
-            -e EXTERNAL_GIT_PAT="${{ secrets.EXTERNAL_GIT_PAT }}" \
+            -e EXTERNAL_GIT_PAT="${EXTERNAL_GIT_PAT:-}" \
             -e CONTENT_FOLDERS="${CONTENT_FOLDERS}" \
             -v "${{ github.workspace }}:/site" \
             --entrypoint bash \
@@ -87,45 +95,83 @@ jobs:
               done
             '
 
-      - name: Create single sync commit if there is a diff vs main
-        id: commit
+      - name: Configure git and show changes
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage ONLY the authoritative folders
           paths=()
           for d in $CONTENT_FOLDERS; do
             paths+=("src/content/$d")
           done
-          git add -A "${paths[@]}"
 
-          # Because we reset branch to origin/main, staged diff == diff vs main
+          echo "== git status (pre-add) =="; git status --porcelain "${paths[@]}" || true
+          git add -A "${paths[@]}"
+          echo "== git diff --staged --name-status =="; git diff --staged --name-status || true
+
+      - name: Commit sync if there is a diff
+        id: commit
+        run: |
+          set -euo pipefail
           if git diff --staged --quiet; then
+            echo "No content changes to commit."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git commit -m "chore(content): sync $TS (${CONTENT_FOLDERS})"
-
-          # Keep the branch as a single-commit snapshot each run
+          # Keep branch as single-commit snapshot
           git push -u origin "$BRANCH_NAME" --force-with-lease
-
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure PR exists / update (only when diff exists)
-        if: ${{ steps.commit.outputs.changed == 'true' }}
+      - name: Keep branch alive when no content changes (optional)
+        if: ${{ steps.commit.outputs.changed != 'true' && env.ALWAYS_PR == 'true' }}
+        run: |
+          set -euo pipefail
+          mkdir -p src/content
+          echo "noop $(date -u +%s)" > src/content/.keep
+          git add src/content/.keep
+          git commit -m "chore(content): keep PR alive (no content changes)"
+          git push -u origin "$BRANCH_NAME" --force-with-lease
+
+      - name: Install tools for PR management
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+
+      - name: Ensure PR exists / update (handles open/closed)
+        if: ${{ steps.commit.outputs.changed == 'true' || env.ALWAYS_PR == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # Update if already open, else create
-          open_pr="$(gh pr list --base main --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' || true)"
-          if [ -n "${open_pr:-}" ]; then
-            gh pr edit "${open_pr}" --title "$PR_TITLE"
+          gh --version
+          gh auth status -h github.com || true
+
+          # Look for any PR (open or closed) from BRANCH_NAME -> main
+          existing="$(gh pr list \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --state all \
+            --json number,state \
+            --jq '.[0] | @json' || true)"
+
+          if [ -n "$existing" ]; then
+            num="$(echo "$existing" | jq -r '.number')"
+            state="$(echo "$existing" | jq -r '.state')"
+            if [ "$state" = "OPEN" ]; then
+              gh pr edit "$num" --repo "$REPO" --title "$PR_TITLE"
+            else
+              gh pr reopen "$num" --repo "$REPO"
+              gh pr edit "$num" --repo "$REPO" --title "$PR_TITLE"
+            fi
           else
+            # Create a new PR (will fail if branch == main with no diff and ALWAYS_PR=false)
             gh pr create \
+              --repo "$REPO" \
               --base main \
               --head "$BRANCH_NAME" \
               --title "$PR_TITLE" \
