@@ -19,7 +19,7 @@ jobs:
 
     env:
       BRANCH_NAME: chore/content-auto
-      CONTENT_FOLDERS: "posts projects"
+      CONTENT_FOLDERS: "post projects"
 
     steps:
       - name: Checkout repo
