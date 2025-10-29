@@ -1,4 +1,4 @@
-name: Export content to site from project repositories
+name: Export content
 
 on:
   schedule:
@@ -18,10 +18,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Space-separated list of subfolders under src/content/ that are exporter-authoritative.
-      # Add more (e.g., "posts projects tutorials") as you grow.
+      BRANCH_NAME: chore/content-auto
       CONTENT_FOLDERS: "posts projects"
-      BRANCH_NAME: "chore/content-auto"
 
     steps:
       - name: Checkout repo
@@ -35,34 +33,12 @@ jobs:
           echo "TS=$TS" >> "$GITHUB_ENV"
           echo "PR_TITLE=Content: nightly export $TS" >> "$GITHUB_ENV"
 
-      - name: Detect existing open PR
-        id: detect_pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare clean content branch from main (single-commit model)
         run: |
           set -euo pipefail
           git fetch origin --prune
-          open_pr="$(gh pr list --base main --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' || true)"
-          if [ -n "${open_pr:-}" ]; then
-            echo "PR_OPEN=true" >> "$GITHUB_ENV"
-            echo "OPEN_PR_NUMBER=$open_pr" >> "$GITHUB_ENV"
-          else
-            echo "PR_OPEN=false" >> "$GITHUB_ENV"
-          fi
-
-      - name: Prepare branch
-        run: |
-          set -euo pipefail
-          git fetch origin --prune
-          if [ "${PR_OPEN}" = "true" ]; then
-            echo "Resetting local $BRANCH_NAME to origin/$BRANCH_NAME"
-            git checkout -B "$BRANCH_NAME" "origin/$BRANCH_NAME"
-            # Optional: keep roughly in sync with main to reduce future conflicts
-            git merge --no-edit --strategy-option theirs origin/main || true
-          else
-            echo "Creating $BRANCH_NAME from origin/main"
-            git checkout -B "$BRANCH_NAME" origin/main
-          fi
+          # Recreate (or create) the branch at origin/main every run
+          git checkout -B "$BRANCH_NAME" origin/main
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -77,7 +53,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Authoritative mirror ONLY for folders listed in CONTENT_FOLDERS (no rsync dependency)
       - name: Run exporter (authoritative mirror for selected folders)
         run: |
           set -euo pipefail
@@ -98,7 +73,7 @@ jobs:
               umask 002
               rm -rf /tmp/content && mkdir -p /tmp/content
 
-              # Run your exporter to /tmp/content (should create /tmp/content/<folder>)
+              # Produce /tmp/content/<folder>
               python tools/export_all.py --out /tmp/content
 
               CONTENT_ROOT="/site/src/content"
@@ -112,48 +87,44 @@ jobs:
               done
             '
 
-      - name: Commit & push changes
+      - name: Create single sync commit if there is a diff vs main
         id: commit
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage only the authoritative content folders (includes deletions inside them)
-          git add -A $(for d in $CONTENT_FOLDERS; do echo "src/content/$d"; done)
+          # Stage ONLY the authoritative folders
+          paths=()
+          for d in $CONTENT_FOLDERS; do
+            paths+=("src/content/$d")
+          done
+          git add -A "${paths[@]}"
 
+          # Because we reset branch to origin/main, staged diff == diff vs main
           if git diff --staged --quiet; then
-            echo "No new changes detected."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git commit -m "chore(content): nightly export $TS (${CONTENT_FOLDERS})"
+          git commit -m "chore(content): sync $TS (${CONTENT_FOLDERS})"
 
-          if ! git push -u origin "$BRANCH_NAME" --force-with-lease; then
-            echo "Non-fast-forward; reconciling with remote…"
-            git fetch origin "$BRANCH_NAME"
-            if ! git rebase "origin/$BRANCH_NAME"; then
-              git rebase --abort || true
-              # Prefer newly generated content on conflicts for authoritative folders
-              git merge --no-edit --strategy-option ours "origin/$BRANCH_NAME"
-            fi
-            git push -u origin "$BRANCH_NAME" --force-with-lease
-          fi
+          # Keep the branch as a single-commit snapshot each run
+          git push -u origin "$BRANCH_NAME" --force-with-lease
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure PR exists / update
+      - name: Ensure PR exists / update (only when diff exists)
         if: ${{ steps.commit.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if [ "${PR_OPEN}" = "true" ]; then
-            echo "Updating existing PR #${OPEN_PR_NUMBER}"
-            gh pr edit "${OPEN_PR_NUMBER}" --title "$PR_TITLE"
+          # Update if already open, else create
+          open_pr="$(gh pr list --base main --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' || true)"
+          if [ -n "${open_pr:-}" ]; then
+            gh pr edit "${open_pr}" --title "$PR_TITLE"
           else
-            echo "Creating new PR"
             gh pr create \
               --base main \
               --head "$BRANCH_NAME" \
