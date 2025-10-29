@@ -26,6 +26,7 @@ jobs:
       BRANCH_NAME: chore/content-auto
       CONTENT_FOLDERS: "post projects"
       REPO: ${{ github.repository }}
+      OWNER: ${{ github.repository_owner }}
       ALWAYS_PR: ${{ inputs.always_pr }}
 
     steps:
@@ -134,6 +135,7 @@ jobs:
           git add src/content/.keep
           git commit -m "chore(content): keep PR alive (no content changes)"
           git push -u origin "$BRANCH_NAME" --force-with-lease
+          echo "changed=true" >> "$GITHUB_OUTPUT"  # Mark as changed so PR step runs
 
       - name: Install tools for PR management
         run: |
@@ -141,39 +143,71 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq
 
-      - name: Ensure PR exists / update (handles open/closed)
+      - name: Ensure PR exists / update (REST API; handles open/closed/merged)
         if: ${{ steps.commit.outputs.changed == 'true' || env.ALWAYS_PR == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh --version
+          gh --version || true
           gh auth status -h github.com || true
 
-          # Look for any PR (open or closed) from BRANCH_NAME -> main
-          existing="$(gh pr list \
-            --repo "$REPO" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --state all \
-            --json number,state \
-            --jq '.[0] | @json' || true)"
+          # Find any PR from OWNER:BRANCH_NAME -> main (state: all)
+          echo "::group::Locate existing PR"
+          PR_JSON="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls?state=all&base=main&head=$OWNER:$BRANCH_NAME" \
+            --jq '.[0] // empty' || true)"
+          echo "Existing PR payload: ${PR_JSON:-<none>}"
+          echo "::endgroup::"
 
-          if [ -n "$existing" ]; then
-            num="$(echo "$existing" | jq -r '.number')"
-            state="$(echo "$existing" | jq -r '.state')"
-            if [ "$state" = "OPEN" ]; then
-              gh pr edit "$num" --repo "$REPO" --title "$PR_TITLE"
-            else
-              gh pr reopen "$num" --repo "$REPO"
-              gh pr edit "$num" --repo "$REPO" --title "$PR_TITLE"
-            fi
+          create_pr() {
+            echo "::group::Create PR"
+            # Creating a PR requires there to be diffs; if there aren't, this will 422.
+            gh api -X POST -H 'Accept: application/vnd.github+json' \
+              "/repos/$REPO/pulls" \
+              -f "title=$PR_TITLE" \
+              -f "head=$BRANCH_NAME" \
+              -f "base=main" \
+              -f "body=Automated content sync from authoritative exporter (${CONTENT_FOLDERS}; deletions included)." \
+              --jq '{number: .number, state: .state, merged: .merged}' || {
+                echo "PR creation failed (likely no diffs)."
+                exit 0
+              }
+            echo "::endgroup::"
+          }
+
+          if [ -z "${PR_JSON:-}" ]; then
+            echo "No prior PR found for $OWNER:$BRANCH_NAME → main. Creating new PR."
+            create_pr
+            exit 0
+          fi
+
+          NUMBER="$(echo "$PR_JSON" | jq -r '.number')"
+          STATE="$(echo "$PR_JSON" | jq -r '.state')"
+
+          # Determine if merged (need a separate call; list endpoint doesn't include merged flag reliably)
+          echo "::group::Check merged status"
+          MergedAt="$(gh api -H 'Accept: application/vnd.github+json' "/repos/$REPO/pulls/$NUMBER" --jq '.merged_at')"
+          echo "PR #$NUMBER state=$STATE merged_at=${MergedAt}"
+          echo "::endgroup::"
+
+          if [ "$STATE" = "open" ]; then
+            echo "::group::Update title for open PR #$NUMBER"
+            gh api -X PATCH -H 'Accept: application/vnd.github+json' \
+              "/repos/$REPO/pulls/$NUMBER" \
+              -f "title=$PR_TITLE" \
+              --jq '{number: .number, state: .state}'
+            echo "::endgroup::"
+          elif [ "$STATE" = "closed" ] && [ "$MergedAt" = "null" ]; then
+            echo "::group::Reopen closed (not merged) PR #$NUMBER and update title"
+            gh api -X PATCH -H 'Accept: application/vnd.github+json' \
+              "/repos/$REPO/pulls/$NUMBER" \
+              -f "state=open" \
+              -f "title=$PR_TITLE" \
+              --jq '{number: .number, state: .state}'
+            echo "::endgroup::"
           else
-            # Create a new PR (will fail if branch == main with no diff and ALWAYS_PR=false)
-            gh pr create \
-              --repo "$REPO" \
-              --base main \
-              --head "$BRANCH_NAME" \
-              --title "$PR_TITLE" \
-              --body "Automated content sync from authoritative exporter (${CONTENT_FOLDERS}; deletions included)."
+            echo "Previous PR is merged or cannot be reopened. Creating a new PR."
+            create_pr
           fi
