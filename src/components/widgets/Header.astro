@@ -22,6 +22,7 @@ export interface Props {
   id?: string;
   links?: Array<MenuLink>;
   actions?: Array<CallToAction>;
+  socials?: Array<MenuLink>;
   isSticky?: boolean;
   isDark?: boolean;
   isFullWidth?: boolean;
@@ -34,6 +35,7 @@ const {
   id = 'header',
   links = [],
   actions = [],
+  socials = [],
   isSticky = false,
   isDark = false,
   isFullWidth = false,
@@ -42,10 +44,8 @@ const {
   position = 'center',
 } = Astro.props;
 
-// Current path like "/blog" or "/blog/post-slug"
 const currentPath = '/' + trimSlash(Astro.url.pathname);
 
-// Active matcher: exact or descendant path
 const isActive = (href?: string) => {
   if (!href) return false;
   const h = '/' + trimSlash(href);
@@ -71,15 +71,39 @@ const isActive = (href?: string) => {
       { 'max-w-7xl': !isFullWidth },
     ]}
   >
+    {/* LEFT / TOP BAR */}
     <div class:list={[{ 'mr-auto rtl:mr-0 rtl:ml-auto': position === 'right' }, 'flex justify-between']}>
       <a class="flex items-center" href={getHomePermalink()}>
         <Logo />
       </a>
-      <div class="flex items-center md:hidden">
+
+      {/* MOBILE: socials + burger */}
+      <div class="flex items-center gap-3 md:hidden">
+        {socials?.length ? (
+          <div class="aw-mobile-socials flex items-center gap-3">
+            {socials.map((social) => (
+              <a
+                href={social.href}
+                class="text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition"
+                aria-label={social.ariaLabel}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {social.icon ? (
+                  <Icon name={social.icon} class="w-5 h-5" />
+                ) : (
+                  <span class="text-sm font-medium">{social.text}</span>
+                )}
+              </a>
+            ))}
+          </div>
+        ) : null}
+
         <ToggleMenu />
       </div>
     </div>
 
+    {/* NAV (desktop) */}
     <nav
       class="aw-nav items-center w-full md:w-auto hidden md:flex md:mx-5 text-default overflow-y-auto overflow-x-hidden md:overflow-y-visible md:overflow-x-auto md:justify-self-center"
       aria-label="Main navigation"
@@ -90,7 +114,6 @@ const isActive = (href?: string) => {
             <li class={links?.length ? 'dropdown' : ''}>
               {links?.length ? (
                 <>
-                  {/* Parent button highlighted if any child is active */}
                   <button
                     type="button"
                     class:list={[
@@ -110,7 +133,7 @@ const isActive = (href?: string) => {
                         <a
                           class:list={[
                             'first:rounded-t last:rounded-b md:hover:bg-gray-100 hover:text-link dark:hover:text-white dark:hover:bg-gray-700 py-2 px-5 block whitespace-no-wrap transition-colors',
-                            { 'text-link font-semibold': isActive(href2) }, // child active style
+                            { 'text-link font-semibold': isActive(href2) },
                           ]}
                           href={href2}
                           {...(isActive(href2) ? { 'aria-current': 'page' } : {})}
@@ -139,30 +162,45 @@ const isActive = (href?: string) => {
       </ul>
     </nav>
 
+    {/* RIGHT-HAND (desktop only) */}
     <div
       class:list={[
         { 'ml-auto rtl:ml-0 rtl:mr-auto': position === 'left' },
-        'hidden md:self-center md:flex items-center md:mb-0 fixed w-full md:w-auto md:static justify-end left-0 rtl:left-auto rtl:right-0 bottom-0 p-3 md:p-0 md:justify-self-end',
+        'aw-desktop-right hidden md:self-center md:flex items-center gap-4 md:mb-0 md:static md:justify-self-end',
       ]}
     >
-      <div class="items-center flex justify-between w-full md:w-auto">
-        {
-          actions?.length
-            ? (
-              <span class="ml-4 rtl:ml-0 rtl:mr-4">
-                {actions.map((btnProps) => (
-                  <Button {...btnProps} class="ml-2 py-2.5 px-5.5 md:px-6 font-semibold shadow-none text-sm w-auto" />
-                ))}
-              </span>
-            )
-            : ''
-        }
-      </div>
+      {socials?.length ? (
+        <div class="flex items-center gap-3">
+          {socials.map((social) => (
+            <a
+              href={social.href}
+              class="text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition"
+              aria-label={social.ariaLabel}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {social.icon ? (
+                <Icon name={social.icon} class="w-5 h-5" />
+              ) : (
+                <span class="text-sm font-medium">{social.text}</span>
+              )}
+            </a>
+          ))}
+        </div>
+      ) : null}
+
+      {actions?.length ? (
+        <span class="ml-2">
+          {actions.map((btnProps) => (
+            <Button {...btnProps} class="ml-2 py-2.5 px-5.5 md:px-6 font-semibold shadow-none text-sm w-auto" />
+          ))}
+        </span>
+      ) : null}
     </div>
   </div>
 
   <style>
-    /* Animated underline for active TOP-LEVEL items only */
+    /* Animated underline for active TOP-LEVEL items */
     .aw-nav > ul > li > a.aw-link-active,
     .aw-nav > ul > li > button.aw-link-active {
       position: relative;
@@ -171,9 +209,9 @@ const isActive = (href?: string) => {
     .aw-nav > ul > li > button.aw-link-active::after {
       content: "";
       position: absolute;
-      left: 1rem;   /* align with px-4 */
+      left: 1rem;
       right: 1rem;
-      bottom: 0.45rem;  /* tweak to taste */
+      bottom: 0.45rem;
       height: 2px;
       background: currentColor;
       border-radius: 2px;
@@ -183,6 +221,20 @@ const isActive = (href?: string) => {
     @keyframes nav-underline {
       from { transform: scaleX(0); }
       to   { transform: scaleX(1); }
+    }
+  </style>
+
+  <style is:global>
+    /* Hide socials on mobile when menu is open */
+    #header.expanded .aw-mobile-socials {
+      display: none;
+    }
+
+    /* Ensure desktop-right never appears on mobile when menu is open */
+    @media (max-width: 767px) {
+      #header.expanded .aw-desktop-right {
+        display: none !important;
+      }
     }
   </style>
 </header>
