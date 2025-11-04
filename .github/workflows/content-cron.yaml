@@ -3,12 +3,7 @@ name: Export content
 on:
   schedule:
     - cron: '30 0 * * *'   # 00:30 UTC nightly
-  workflow_dispatch:
-    inputs:
-      always_pr:
-        description: "Create/keep a PR even when there are no content changes (adds a tiny .keep file)."
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -21,13 +16,11 @@ concurrency:
 jobs:
   export:
     runs-on: ubuntu-latest
-
     env:
       BRANCH_NAME: chore/content-auto
-      CONTENT_FOLDERS: "post projects"
       REPO: ${{ github.repository }}
       OWNER: ${{ github.repository_owner }}
-      ALWAYS_PR: ${{ inputs.always_pr }}
+      MARKER: .managed-by-exporter
 
     steps:
       - name: Checkout repo
@@ -35,17 +28,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Init vars
+      - name: Timestamp + PR title
         run: |
           TS="$(date -u +'%Y%m%dT%H%M%SZ')"
           echo "TS=$TS" >> "$GITHUB_ENV"
-          echo "PR_TITLE=Content: nightly export $TS" >> "$GITHUB_ENV"
+          echo "PR_TITLE=Content sync: $TS" >> "$GITHUB_ENV"
 
-      - name: Prepare clean content branch from main (single-commit model)
+      - name: Prepare content branch (do not modify main)
         run: |
           set -euo pipefail
           git fetch origin --prune
-          git checkout -B "$BRANCH_NAME" origin/main
+          git checkout -B "$BRANCH_NAME" origin/main || git checkout -b "$BRANCH_NAME"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -60,7 +53,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run exporter (authoritative mirror for selected folders)
+      - name: Run exporter
         env:
           EXTERNAL_GIT_PAT: ${{ secrets.EXTERNAL_GIT_PAT }}
         run: |
@@ -70,7 +63,6 @@ jobs:
             -u "${uid}:${gid}" \
             -e HOME=/tmp \
             -e EXTERNAL_GIT_PAT="${EXTERNAL_GIT_PAT:-}" \
-            -e CONTENT_FOLDERS="${CONTENT_FOLDERS}" \
             -v "${{ github.workspace }}:/site" \
             --entrypoint bash \
             content-export:local \
@@ -79,135 +71,138 @@ jobs:
               if [ -n "${EXTERNAL_GIT_PAT:-}" ]; then
                 git config --global url."https://$EXTERNAL_GIT_PAT:@github.com/".insteadOf "https://github.com/"
               fi
-              umask 002
               rm -rf /tmp/content && mkdir -p /tmp/content
-
-              # Produce /tmp/content/<folder>
               python tools/export_all.py --out /tmp/content
-
-              CONTENT_ROOT="/site/src/content"
-              for d in ${CONTENT_FOLDERS}; do
-                echo "Syncing authoritative folder: $d"
-                rm -rf "${CONTENT_ROOT}/${d}"
-                mkdir -p "${CONTENT_ROOT}/${d}"
-                if [ -d "/tmp/content/${d}" ]; then
-                  cp -a "/tmp/content/${d}/." "${CONTENT_ROOT}/${d}/"
-                fi
-              done
+              ls -la /tmp/content || true
             '
 
-      - name: Configure git and show changes
+      - name: Merge exported content (keep manual items)
+        run: |
+          set -euo pipefail
+
+          SRC=/tmp/content
+          DEST=src/content
+          mkdir -p "$DEST/post" "$DEST/projects"
+
+          # helper: mark managed folder
+          mark_managed() {
+            local path="$1"
+            touch "$path/$MARKER"
+          }
+
+          # 1) POSTS — delete only previously-managed folders that disappeared upstream
+          # Build set of exported slugs
+          mapfile -t EXPORTED_POSTS < <(find "$SRC/post" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null || true)
+          # Index exported posts for quick lookup
+          printf "%s\n" "${EXPORTED_POSTS[@]:-}" | sort -u > /tmp/exported_posts.txt
+
+          # Remove missing-managed posts (have a marker; no longer exported)
+          if [ -d "$DEST/post" ]; then
+            while IFS= read -r -d '' dir; do
+              slug="$(basename "$dir")"
+              if [ -f "$dir/$MARKER" ] && ! grep -qx "$slug" /tmp/exported_posts.txt; then
+                echo "Deleting stale managed post: $slug"
+                rm -rf "$dir"
+              fi
+            done < <(find "$DEST/post" -mindepth 1 -maxdepth 1 -type d -print0)
+          fi
+
+          # Copy/replace exported posts (mark them as managed)
+          if [ -d "$SRC/post" ]; then
+            while IFS= read -r -d '' dir; do
+              slug="$(basename "$dir")"
+              tgt="$DEST/post/$slug"
+              rm -rf "$tgt"
+              mkdir -p "$tgt"
+              cp -a "$dir/." "$tgt/"
+              mark_managed "$tgt"
+              echo "Synced post: $slug"
+            done < <(find "$SRC/post" -mindepth 1 -maxdepth 1 -type d -print0)
+          fi
+
+          # 2) PROJECTS — same idea as posts; we add our own marker on copy
+          mapfile -t EXPORTED_PROJ < <(find "$SRC/projects" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null || true)
+          printf "%s\n" "${EXPORTED_PROJ[@]:-}" | sort -u > /tmp/exported_projects.txt
+
+          if [ -d "$DEST/projects" ]; then
+            while IFS= read -r -d '' dir; do
+              slug="$(basename "$dir")"
+              if [ -f "$dir/$MARKER" ] && ! grep -qx "$slug" /tmp/exported_projects.txt; then
+                echo "Deleting stale managed project: $slug"
+                rm -rf "$dir"
+              fi
+            done < <(find "$DEST/projects" -mindepth 1 -maxdepth 1 -type d -print0)
+          fi
+
+          if [ -d "$SRC/projects" ]; then
+            while IFS= read -r -d '' dir; do
+              slug="$(basename "$dir")"
+              tgt="$DEST/projects/$slug"
+              rm -rf "$tgt"
+              mkdir -p "$tgt"
+              cp -a "$dir/." "$tgt/"
+              mark_managed "$tgt"
+              echo "Synced project: $slug"
+            done < <(find "$SRC/projects" -mindepth 1 -maxdepth 1 -type d -print0)
+          fi
+
+      - name: Configure git + stage
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A src/content
+          echo "== staged =="
+          git diff --staged --name-status || true
 
-          paths=()
-          for d in $CONTENT_FOLDERS; do
-            paths+=("src/content/$d")
-          done
-
-          echo "== git status (pre-add) =="; git status --porcelain "${paths[@]}" || true
-          git add -A "${paths[@]}"
-          echo "== git diff --staged --name-status =="; git diff --staged --name-status || true
-
-      - name: Commit sync if there is a diff
+      - name: Commit & push if changed
         id: commit
         run: |
           set -euo pipefail
           if git diff --staged --quiet; then
-            echo "No content changes to commit."
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes; skipping PR."
             exit 0
           fi
-
-          git commit -m "chore(content): sync $TS (${CONTENT_FOLDERS})"
-          # Keep branch as single-commit snapshot
+          git commit -m "chore(content): sync $TS"
           git push -u origin "$BRANCH_NAME" --force-with-lease
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Keep branch alive when no content changes (optional)
-        if: ${{ steps.commit.outputs.changed != 'true' && env.ALWAYS_PR == 'true' }}
-        run: |
-          set -euo pipefail
-          mkdir -p src/content
-          echo "noop $(date -u +%s)" > src/content/.keep
-          git add src/content/.keep
-          git commit -m "chore(content): keep PR alive (no content changes)"
-          git push -u origin "$BRANCH_NAME" --force-with-lease
-          echo "changed=true" >> "$GITHUB_OUTPUT"  # Mark as changed so PR step runs
-
-      - name: Install tools for PR management
+      - name: Install GitHub CLI
+        if: steps.commit.outputs.changed == 'true'
         run: |
           set -euo pipefail
           sudo apt-get update -y
-          sudo apt-get install -y jq
+          sudo apt-get install -y gh jq
 
-      - name: Ensure PR exists / update (REST API; handles open/closed/merged)
-        if: ${{ steps.commit.outputs.changed == 'true' || env.ALWAYS_PR == 'true' }}
+      - name: Create or update PR
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh --version || true
-          gh auth status -h github.com || true
-
-          # Find any PR from OWNER:BRANCH_NAME -> main (state: all)
-          echo "::group::Locate existing PR"
-          PR_JSON="$(gh api \
-            -H 'Accept: application/vnd.github+json' \
-            "/repos/$REPO/pulls?state=all&base=main&head=$OWNER:$BRANCH_NAME" \
-            --jq '.[0] // empty' || true)"
-          echo "Existing PR payload: ${PR_JSON:-<none>}"
-          echo "::endgroup::"
-
-          create_pr() {
-            echo "::group::Create PR"
-            # Creating a PR requires there to be diffs; if there aren't, this will 422.
-            gh api -X POST -H 'Accept: application/vnd.github+json' \
-              "/repos/$REPO/pulls" \
-              -f "title=$PR_TITLE" \
-              -f "head=$BRANCH_NAME" \
-              -f "base=main" \
-              -f "body=Automated content sync from authoritative exporter (${CONTENT_FOLDERS}; deletions included)." \
-              --jq '{number: .number, state: .state, merged: .merged}' || {
-                echo "PR creation failed (likely no diffs)."
-                exit 0
-              }
-            echo "::endgroup::"
-          }
+          # Find existing PR from chore/content-auto -> main (any state)
+          PR_JSON="$(gh api -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls?state=all&base=main&head=$OWNER:$BRANCH_NAME" --jq '.[0] // empty' || true)"
 
           if [ -z "${PR_JSON:-}" ]; then
-            echo "No prior PR found for $OWNER:$BRANCH_NAME → main. Creating new PR."
-            create_pr
+            echo "No PR found; creating."
+            gh pr create \
+              --title "$PR_TITLE" \
+              --body "Automated content sync (exported posts/projects). Manual content is preserved. Managed items are marked by \`$MARKER\`." \
+              --base main \
+              --head "$BRANCH_NAME"
             exit 0
           fi
 
           NUMBER="$(echo "$PR_JSON" | jq -r '.number')"
           STATE="$(echo "$PR_JSON" | jq -r '.state')"
 
-          # Determine if merged (need a separate call; list endpoint doesn't include merged flag reliably)
-          echo "::group::Check merged status"
-          MergedAt="$(gh api -H 'Accept: application/vnd.github+json' "/repos/$REPO/pulls/$NUMBER" --jq '.merged_at')"
-          echo "PR #$NUMBER state=$STATE merged_at=${MergedAt}"
-          echo "::endgroup::"
-
           if [ "$STATE" = "open" ]; then
-            echo "::group::Update title for open PR #$NUMBER"
-            gh api -X PATCH -H 'Accept: application/vnd.github+json' \
-              "/repos/$REPO/pulls/$NUMBER" \
-              -f "title=$PR_TITLE" \
-              --jq '{number: .number, state: .state}'
-            echo "::endgroup::"
-          elif [ "$STATE" = "closed" ] && [ "$MergedAt" = "null" ]; then
-            echo "::group::Reopen closed (not merged) PR #$NUMBER and update title"
-            gh api -X PATCH -H 'Accept: application/vnd.github+json' \
-              "/repos/$REPO/pulls/$NUMBER" \
-              -f "state=open" \
-              -f "title=$PR_TITLE" \
-              --jq '{number: .number, state: .state}'
-            echo "::endgroup::"
+            echo "Updating title of open PR #$NUMBER"
+            gh pr edit "$NUMBER" --title "$PR_TITLE"
           else
-            echo "Previous PR is merged or cannot be reopened. Creating a new PR."
-            create_pr
+            echo "Reopening closed PR #$NUMBER"
+            gh pr reopen "$NUMBER" || true
+            gh pr edit "$NUMBER" --title "$PR_TITLE"
           fi
