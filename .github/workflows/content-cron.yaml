@@ -181,28 +181,65 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # Find existing PR from chore/content-auto -> main (any state)
-          PR_JSON="$(gh api -H 'Accept: application/vnd.github+json' \
-            "/repos/$REPO/pulls?state=all&base=main&head=$OWNER:$BRANCH_NAME" --jq '.[0] // empty' || true)"
 
-          if [ -z "${PR_JSON:-}" ]; then
-            echo "No PR found; creating."
-            gh pr create \
-              --title "$PR_TITLE" \
-              --body "Automated content sync (exported posts/projects). Manual content is preserved. Managed items are marked by \`$MARKER\`." \
-              --base main \
-              --head "$BRANCH_NAME"
+          # 1) Try to find an OPEN PR for head=$OWNER:$BRANCH_NAME → main
+          OPEN_PR="$(gh api -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls?state=open&base=main&head=$OWNER:$BRANCH_NAME" \
+            --jq '.[0] // empty' || true)"
+
+          if [ -n "${OPEN_PR:-}" ]; then
+            NUMBER="$(jq -r '.number' <<<"$OPEN_PR")"
+            echo "Open PR #$NUMBER found; updating title."
+            gh api -X PATCH -H 'Accept: application/vnd.github+json' \
+              "/repos/$REPO/pulls/$NUMBER" \
+              -f "title=$PR_TITLE" >/dev/null
             exit 0
           fi
 
-          NUMBER="$(echo "$PR_JSON" | jq -r '.number')"
-          STATE="$(echo "$PR_JSON" | jq -r '.state')"
+          # 2) No open PR → attempt creation
+          echo "No open PR; attempting to create a new one."
+          set +e
+          CREATE_OUT="$(gh api -X POST -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls" \
+            -f "title=$PR_TITLE" \
+            -f "head=$BRANCH_NAME" \
+            -f "base=main" \
+            -f "body=Automated content sync (exported posts/projects). Manual content is preserved. Managed items are marked by \`$MARKER\`." \
+            2>&1)"
+          STATUS=$?
+          set -e
 
-          if [ "$STATE" = "open" ]; then
-            echo "Updating title of open PR #$NUMBER"
-            gh pr edit "$NUMBER" --title "$PR_TITLE"
-          else
-            echo "Reopening closed PR #$NUMBER"
-            gh pr reopen "$NUMBER" || true
-            gh pr edit "$NUMBER" --title "$PR_TITLE"
+          if [ $STATUS -eq 0 ]; then
+            echo "PR created."
+            exit 0
           fi
+
+          # 3) Creation failed (likely 422: PR already exists but is CLOSED). Try reopening via REST.
+          echo "PR creation failed; trying to reopen a closed PR if eligible."
+          CLOSED_PR="$(gh api -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls?state=closed&base=main&head=$OWNER:$BRANCH_NAME&sort=updated&direction=desc" \
+            --jq '.[0] // empty' || true)"
+
+          if [ -z "${CLOSED_PR:-}" ]; then
+            echo "No closed PR found to reopen. Full error from create attempt:"
+            echo "$CREATE_OUT"
+            exit 1
+          fi
+
+          NUMBER="$(jq -r '.number' <<<"$CLOSED_PR")"
+          MERGED_AT="$(jq -r '.merged_at' <<<"$CLOSED_PR")"
+
+          if [ "$MERGED_AT" != "null" ]; then
+            echo "Closed PR #$NUMBER was merged; creating a fresh PR should be allowed."
+            echo "Create error was unexpected:"
+            echo "$CREATE_OUT"
+            exit 1
+          fi
+
+          echo "Reopening closed (unmerged) PR #$NUMBER via REST PATCH."
+          gh api -X PATCH -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPO/pulls/$NUMBER" \
+            -f "state=open" \
+            -f "title=$PR_TITLE" >/dev/null
+
+          echo "Reopened PR #$NUMBER."
