@@ -246,18 +246,42 @@ def rewrite_urls_and_copy_assets(
     text = _HTML_SRC_OR_HREF.sub(_html_repl, text)
     return text
 
-def sync_assets_to_public(slug: str, src_assets_dir: pathlib.Path) -> None:
-    """
-    Mirror the per-post assets directory to public/blog/<slug>/assets/
-    so that Astro's static server (and dev at :4321) can actually serve them.
-    """
-    if not src_assets_dir.exists():
+def mirror_tree(src_dir: pathlib.Path, dst_dir: pathlib.Path) -> None:
+    import hashlib, shutil
+    if not src_dir.exists():
+        if dst_dir.exists():
+            shutil.rmtree(dst_dir)
         return
+
+    def walk_files(base: pathlib.Path) -> set[str]:
+        out = set()
+        for p in base.rglob("*"):
+            if p.is_file():
+                out.add(str(p.relative_to(base)))
+        return out
+
+    src_files = walk_files(src_dir)
+    dst_files = walk_files(dst_dir) if dst_dir.exists() else set()
+
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    for rel in src_files:
+        s = src_dir / rel
+        d = dst_dir / rel
+        d.parent.mkdir(parents=True, exist_ok=True)
+        if (not d.exists()) or (hashlib.sha256(s.read_bytes()).hexdigest() != hashlib.sha256(d.read_bytes()).hexdigest()):
+            shutil.copy2(s, d)
+
+    for rel in (dst_files - src_files):
+        stale = dst_dir / rel
+        try:
+            stale.unlink()
+        except IsADirectoryError:
+            shutil.rmtree(stale, ignore_errors=True)
+
+def sync_assets_to_public(slug: str, src_assets_dir: pathlib.Path) -> None:
     dest = PUBLIC_BLOG / slug / ASSET_DIR_NAME
-    dest.mkdir(parents=True, exist_ok=True)
-    for p in src_assets_dir.iterdir():
-        if p.is_file():
-            shutil.copy2(p, dest / p.name)
+    mirror_tree(src_assets_dir, dest)
 
 # ---------- Markdown cell processors (code/math safe)
 
