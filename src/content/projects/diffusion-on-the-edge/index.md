@@ -2,7 +2,7 @@
 title: Diffusion On The Edge
 description: Exploration of maximal entropy for diffusion models
 tier: 1
-image: ''
+image: /projects/diffusion-on-the-edge-2145a938.mp4
 date: 2025-09-15
 links:
 - title: Repo

@@ -58,6 +58,7 @@ prev:
 
 
 
+
 # Diffusion on the edge - Part II: Maximal manifold exploration {#diffusion-on-the-edge-part-ii-maximal-manifold-exploration}
 
 In the previous part, we explored the basics of score-matching based diffusion models and continous-time stochastic processes.
