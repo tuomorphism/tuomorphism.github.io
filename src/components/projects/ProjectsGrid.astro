@@ -6,7 +6,20 @@ interface Props {
   items: CollectionEntry<'projects'>[];
   previewCount?: number;
 }
-const { items } = Astro.props as Props;
+const { items, previewCount } = Astro.props as Props;
+
+const sortedItems = [...items].sort((a, b) => {
+  if (a.data.tier !== b.data.tier) return a.data.tier - b.data.tier;
+  const bDate = (b.data.date || new Date()).getTime()
+  const aDate = (a.data.date || new Date()).getTime()
+  // Date comparison, newer first
+  if (aDate != bDate) return bDate - aDate;
+  return a.data.title.localeCompare(b.data.title);
+});
+
+const visibleItems = typeof previewCount === 'number'
+  ? sortedItems.slice(0, previewCount)
+  : sortedItems;
 ---
 
 <!-- ProjectGrid.astro -->
@@ -15,10 +28,9 @@ const { items } = Astro.props as Props;
   class="masonry-grid grid gap-6 sm:gap-7 lg:gap-8
          grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
 >
-  {items.map((p) => (
+  {visibleItems.map((p) => (
     <article class="grid-item">
       <div class="grid-item-content">
-        <!-- Your existing ProjectCard markup goes here -->
         <ProjectCard project={p} />
       </div>
     </article>
@@ -42,7 +54,6 @@ const { items } = Astro.props as Props;
 
     const all = () => grid.querySelectorAll('.grid-item').forEach(size);
 
-    // Recompute on load/resize and when items change size
     const ro = new ResizeObserver(() => all());
     grid.querySelectorAll('.grid-item-content').forEach((el) => ro.observe(el));
 
