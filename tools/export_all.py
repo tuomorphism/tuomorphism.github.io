@@ -42,17 +42,18 @@ from nbformat import NotebookNode
 # ---------- Paths
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EXTERNAL = ROOT / "external"
+TEMPLATE_DIR = ROOT / "tools" / "templates"
 POST_OUT = ROOT / "src" / "content" / "post"
 PROJ_OUT = ROOT / "src" / "content" / "projects"
-PUBLIC_BLOG = ROOT / "public" / "blog"  # <-- where we mirror assets so Astro can serve them
-TEMPLATE_DIR = ROOT / "tools" / "templates"
+PUBLIC_BLOG = ROOT / "public" / "blog"
+PUBLIC_PROJECTS = ROOT / "public" / "projects"
+
 
 # ---------- Config
 ASSET_DIR_NAME = "assets"
 ASSET_SOURCE_DIR_CANDIDATES = ("assets", "_assets")
 MAX_TOC_DEPTH = 3
 
-# ---------- Regex
 _MD_LINK_IMG = re.compile(r'(!?)\[(?P<alt>[^\]]*)\]\((?P<url>[^)\s]+)(?:\s+"[^"]*")?\)')
 _HTML_SRC_OR_HREF = re.compile(r'(?P<attr>\bsrc\b|\bhref\b)\s*=\s*([\'"])(?P<url>[^\'"]+)\2')
 _MD_HEADING = re.compile(r'^(?P<hash>#{1,6})\s+(?P<text>.+?)\s*$', re.MULTILINE)
@@ -65,7 +66,6 @@ _BLOCK_MATH  = re.compile(r'(^\$\$.*?^\$\$)', re.MULTILINE | re.DOTALL)
 _SPACES_EOL = re.compile(r'[ \t]+$', re.MULTILINE)
 _slug_re = re.compile(r"[^a-z0-9-]+")
 
-# ---------- Utilities
 
 def run(cmd, cwd=None):
     print("+", " ".join(cmd), "[cwd=" + str(cwd or ROOT) + "]")
@@ -88,7 +88,7 @@ def content_hash(path: pathlib.Path) -> str:
 def _norm_text(s: str) -> str:
     return s.replace('\r\n', '\n').replace('\r', '\n').lstrip('\ufeff')
 
-# --- Date normalization helpers (fixes quoted date strings)
+
 def _coerce_date_like(v):
     if isinstance(v, datetime):
         return v.date()
@@ -171,6 +171,66 @@ def git_last_commit_date(repo_root: pathlib.Path, path: pathlib.Path) -> Optiona
         return None
 
 # ---------- Asset helpers
+def ensure_dir(p: pathlib.Path) -> None:
+    p.mkdir(parents=True, exist_ok=True)
+
+def copy_project_image_for_repo(
+    repo_dir: pathlib.Path,
+    slug: str,
+    override: str | None = None,
+) -> str:
+    """
+    Returns the URL to be stored in frontmatter for the project image.
+
+    Convention:
+    - Default: assets/hero.png inside the project repo.
+    - Optional: `override` can point to a custom relative path in the repo.
+    - If nothing is found, returns "".
+    """
+    ensure_dir(PUBLIC_PROJECTS)
+
+    # Decide which path to look for inside the repo
+    if override:
+        candidate = (repo_dir / override).resolve()
+        if not candidate.exists():
+            print(f"! override project image not found for {slug}: {override}", file=sys.stderr)
+            return ""
+    else:
+        # Try hero media files in priority order
+        candidates = [
+            repo_dir / "assets" / "hero.mp4",
+            repo_dir / "assets" / "hero.webm",
+            repo_dir / "assets" / "hero.gif",
+            repo_dir / "assets" / "hero.png",
+            repo_dir / "assets" / "hero.jpg",
+            repo_dir / "assets" / "hero.jpeg",
+            repo_dir / "assets" / "hero.webp",
+        ]
+
+        candidate = None
+        for path in candidates:
+            if path.exists():
+                candidate = path.resolve()
+                break
+
+        if not candidate:
+            print(f"- no hero media found in assets/ for {slug}, skipping project image")
+            return ""
+
+    if not candidate.exists():
+        # Nothing to copy → no image
+        print(f"- no assets/hero.png for {slug}, skipping project image")
+        return ""
+
+    data = candidate.read_bytes()
+    h = hashlib.sha256(data).hexdigest()[:8]
+    ext = candidate.suffix or ".png"
+    fname = f"{slug}-{h}{ext}"
+    out_path = PUBLIC_PROJECTS / fname
+    out_path.write_bytes(data)
+
+    return f"/projects/{fname}"
+
 
 def is_relative_local(url: str) -> bool:
     if not url:
@@ -181,8 +241,6 @@ def is_relative_local(url: str) -> bool:
         return False
     return True
 
-def ensure_dir(p: pathlib.Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
 
 def copy_asset_make_name(src: pathlib.Path, out_assets_dir: pathlib.Path) -> str:
     data = src.read_bytes()
@@ -442,7 +500,10 @@ def make_project_card(repo_dir: pathlib.Path, repo_url: Optional[str], blog_post
 
     description = meta.get("description", "")
     tier = meta.get("tier", 2)
-    image = meta.get("image") or meta.get("heroImage") or ""
+
+    image_override = meta.get("image") or meta.get("heroImage") or ""
+    image = copy_project_image_for_repo(repo_dir, slug, override=image_override)
+
     date_value = meta.get("date") or datetime.now().date()
 
     links: List[Dict[str, str]] = []

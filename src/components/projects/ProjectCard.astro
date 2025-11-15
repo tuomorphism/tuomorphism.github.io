@@ -8,10 +8,23 @@ interface Props {
 }
 const { project } = Astro.props as Props;
 const data = project.data;
+const date = data.date || new Date()
 ---
 
 <article class="w-full min-w-0 h-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm transition-shadow hover:shadow-md">
-  {data.image && (
+
+  {data.tier === 1 && data.image && data.image?.endsWith('.mp4') && (
+    <video
+      src={data.image}
+      autoplay
+      muted
+      loop
+      playsinline
+      class="hidden sm:block w-full max-w-full aspect-[4/3] object-cover"
+    ></video>
+  )}
+
+  {data.tier === 1 && data.image && !data.image?.endsWith('.mp4') && (
     <img
       src={data.image}
       alt={data.title}
@@ -27,6 +40,12 @@ const data = project.data;
         <h3 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white truncate">
           {data.title}
         </h3>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Updated {new Date(date).toLocaleDateString('en-GB', {
+            year: 'numeric',
+            month: 'short',
+          })}
+        </p>
         <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300 break-words">
           {data.description}
         </p>
