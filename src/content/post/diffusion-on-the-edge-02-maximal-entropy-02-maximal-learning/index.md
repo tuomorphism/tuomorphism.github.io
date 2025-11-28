@@ -1,6 +1,6 @@
 ---
 title: 'Diffusion on the edge - Part II: Maximal manifold exploration'
-publishDate: 2025-11-02
+publishDate: 2025-11-28
 frontSlug: diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning
 toc_items:
 - level: 1
@@ -51,12 +51,13 @@ toc_items:
 - level: 1
   text: Conclusion
   id: conclusion
+- level: 1
+  text: References
+  id: references
 prev:
   title: Diffusion models - Introduction
-  url: /blog/diffusion-on-the-edge-01-introduction-notebook
+  url: /blog/diffusion-on-the-edge-01-introduction-01-introduction
 ---
-
-
 
 
 # Diffusion on the edge - Part II: Maximal manifold exploration {#diffusion-on-the-edge-part-ii-maximal-manifold-exploration}
@@ -375,7 +376,7 @@ $$
 \nabla_x \delta \mathcal{H}(p^\pi_T) \;=\; - \nabla_x \log p^\pi_T(x) \;\approx\; - s^\pi(x, T),
 $$
 
-where $s^\pi$ is the score function. For more details, please refer to the original paper _paper name here_.
+where $s^\pi$ is the score function. For more details, please refer to the original paper _Provable Maximum Entropy Manifold Exploration via Diffusion Models_.
 
 This means that instead of explicitly computing densities, we can use the score network itself to provide the update direction for entropy maximization. Fine-tuning reduces to an iterative process where the pre-trained score model supplies the gradient information needed to explore low-density regions.
 
@@ -680,3 +681,9 @@ The above picture displays nicely the effect of our entropy increasing fine tuni
 # Conclusion {#conclusion}
 
 We have now implemented a mirror-descent style fine-tuning operation on our diffusion model. This implementation clearly has the ability to find undersampled samples and increase the resulting entropy of our
+
+# References {#references}
+
+- De Santi, R., Vlastelica, M., Hsieh, Y-P., Shen, Z., He, N., & Krause, A. (2025). Provable Maximum Entropy Manifold Exploration via Diffusion Models.
+Proceedings of ICML 2025. Available at: _arXiv:2506.15385_.
+- Song, Y., Sohl-Dickstein, J., Kingma, D. P., Kumar, A., Ermon, S., & Poole, B. (2021). Score-based generative modeling through stochastic differential equations.  International Conference on Learning Representations (ICLR). Available at: _arXiv:2011.13456_.
