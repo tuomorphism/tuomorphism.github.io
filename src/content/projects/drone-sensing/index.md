@@ -1,7 +1,7 @@
 ---
 title: Drone sensing
 description: Exploration of visual odometry and sensor-fusion techniques for drones
-tier: 1
+tier: 2
 image: ''
 date: 2025-09-15
 links:
