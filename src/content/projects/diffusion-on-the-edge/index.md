@@ -9,7 +9,7 @@ links:
   url: https://github.com/tuomorphism/diffusion-on-the-edge
 blog_posts:
 - title: Diffusion models - Introduction
-  url: /blog/diffusion-on-the-edge-01-introduction-notebook
+  url: /blog/diffusion-on-the-edge-01-introduction-01-introduction
 - title: 'Diffusion on the edge - Part II: Maximal manifold exploration'
   url: /blog/diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning
 ---
