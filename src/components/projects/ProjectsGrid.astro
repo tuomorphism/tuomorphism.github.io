@@ -20,30 +20,55 @@ const sortedItems = [...items].sort((a, b) => {
 const visibleItems = typeof previewCount === 'number'
   ? sortedItems.slice(0, previewCount)
   : sortedItems;
+
+const tier1Items = visibleItems.filter((p) => p.data.tier === 1);
+const otherItems = visibleItems.filter((p) => p.data.tier !== 1);
 ---
 
-<!-- ProjectGrid.astro -->
-<section
-  id="projects"
-  class="masonry-grid grid gap-6 sm:gap-7 lg:gap-8
-         grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
->
-  {visibleItems.map((p) => (
-    <article class="grid-item">
-      <div class="grid-item-content">
-        <ProjectCard project={p} />
-      </div>
-    </article>
-  ))}
+<section id="projects" class="space-y-6">
+  <!-- Row of tier 1 (hero) projects -->
+  {tier1Items.length > 0 && (
+    <div
+      class="grid gap-4 sm:gap-4 lg:gap-4
+             grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {tier1Items.map((p) => (
+        <article class="grid-item">
+          <div class="grid-item-content">
+            <ProjectCard project={p} />
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+
+  <!-- Masonry grid for the rest -->
+  {otherItems.length > 0 && (
+    <div
+      id="projects-masonry"
+      class="masonry-grid grid gap-4 sm:gap-4 lg:gap-4
+             grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {otherItems.map((p) => (
+        <article class="grid-item">
+          <div class="grid-item-content">
+            <ProjectCard project={p} />
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
 </section>
 
 <script is:inline>
-  // Masonry with CSS Grid row-span trick
-  const grid = document.currentScript?.previousElementSibling;
+  // Masonry for the "other" projects only
+  const grid = document.querySelector('#projects-masonry');
 
   if (grid) {
     const gap = parseInt(getComputedStyle(grid).gap) || 0;
-    const row = parseInt(getComputedStyle(grid).getPropertyValue('--masonry-row') || '8'); // px
+    const row = parseInt(
+      getComputedStyle(grid).getPropertyValue('--masonry-row') || '8'
+    ); // px
 
     const size = (item) => {
       const content = item.querySelector('.grid-item-content') || item;
@@ -62,3 +87,4 @@ const visibleItems = typeof previewCount === 'number'
     all();
   }
 </script>
+
