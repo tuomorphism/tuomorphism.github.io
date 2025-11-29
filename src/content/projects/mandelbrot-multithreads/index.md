@@ -2,7 +2,7 @@
 title: Mandelbrot-Multithreads
 description: Mandelbrot set computation showcase of free-threaded Python
 tier: 2
-image: ''
+image: /projects/mandelbrot-multithreads-bacc6099.png
 date: 2025-09-15
 links:
 - title: Repo
