@@ -190,6 +190,8 @@ plt.grid()
 
   
 </div>
+The Z-coordinate is a nice parabola.
+
 For the case where our thrust is $F_T = -G + (0, 0, 1.0)^T$. We can see that after $1.0$ seconds, we have reached the altitude of $1.5$ meters, since we started from $1.0$ we have gained $0.5$ meters in a second. This corresponds nicely to the equation $x = 1/2 at^2$.
 
 We are therefore happy with our integration scheme. We will use the integrator later when we implement our simulation loop.
@@ -558,7 +560,7 @@ plt.grid()
   
 
     
-![png](output-24-0.4bef4ce3.png)
+![png](output-25-0.4bef4ce3.png)
     
 
   
@@ -574,7 +576,7 @@ plt.grid()
   
 
     
-![png](output-25-0.f6d3886c.png)
+![png](output-26-0.f6d3886c.png)
     
 
   
@@ -590,7 +592,7 @@ plt.grid()
   
 
     
-![png](output-26-0.26b04d9f.png)
+![png](output-27-0.26b04d9f.png)
     
 
   
@@ -604,11 +606,13 @@ plt.grid()
   
 
     
-![png](output-27-0.7964e272.png)
+![png](output-28-0.7964e272.png)
     
 
   
 </div>
+These graphs are quite nice to get an initial understanding of the drone behaviour. But we can also create a 3-dimensional visualization.
+
 ## Simulation saving and visualization {#simulation-saving-and-visualization}
 
 We save the data of the simulation, and then use Manim to visualize it.
@@ -644,9 +648,7 @@ with tempconfig({"quality": "medium_quality", "preview": False, "disable_caching
 
 ```
 <pre><code class="language-output"></code></pre>
-<video src="/blog/drone-sim-nav-drone-simulation/assets/trajectory.5f1005c4.mp4" width=560 height=480 controls autoplay />
-
-
+<video src="/blog/drone-sim-nav-drone-simulation/assets/trajectory.5f1005c4.mp4" width=560 height=480 controls autoplay></video>
 
 In the video above, we see the trajectory of the drone in blue. The green ball represents the goal and the pillars are the defined obstacles.
 We can see that our drone successfully evades the obstacles and arrives in the vicinity of the goal.
