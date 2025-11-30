@@ -5,7 +5,6 @@ IMAGE_NAME := notebook-exporter
 CONTAINER_NAME := notebook-exporter-run
 DOCKERFILE := tools/Dockerfile.exporter
 WORKDIR := $(shell pwd)
-PYTHON_CMD := python tools/export_all.py
 
 # Default target
 .PHONY: all
