@@ -537,7 +537,9 @@ states = simulation_loop(
 ## Trajectory visualization {#trajectory-visualization}
 
 In the cells below we plot the state of the drone as a function of time, we plot the position, velocity and thrust of the rocket.
-At the end, we plot the trajectory as a 3-dimensional graph.
+At the end, we plot the trajectory as a 3-dimensional animation.
+
+In the plots below with multiple components, x, y, and z components are blue, orange and green colors respectively.
 
 
 ```python
@@ -551,7 +553,7 @@ goal_position = np.asarray([goal_function(t) for t in timesteps])
 
 
 ```python
-sns.lineplot(y = drone_trajectory[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$')
+sns.lineplot(y = drone_trajectory[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$', title='Position components')
 sns.lineplot(y = drone_trajectory[:, 1], x = timesteps)
 sns.lineplot(y = drone_trajectory[:, 2], x = timesteps)
 plt.grid()
@@ -560,14 +562,14 @@ plt.grid()
   
 
     
-![png](output-25-0.4bef4ce3.png)
+![png](output-25-0.ffc67c17.png)
     
 
   
 </div>
 
 ```python
-sns.lineplot(y = drone_velocity[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$')
+sns.lineplot(y = drone_velocity[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$', title='Velocity components')
 sns.lineplot(y = drone_velocity[:, 1], x = timesteps)
 sns.lineplot(y = drone_velocity[:, 2], x = timesteps)
 plt.grid()
@@ -576,14 +578,14 @@ plt.grid()
   
 
     
-![png](output-26-0.f6d3886c.png)
+![png](output-26-0.4b937b9f.png)
     
 
   
 </div>
 
 ```python
-sns.lineplot(y = drone_thrust[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$')
+sns.lineplot(y = drone_thrust[:, 0], x = timesteps).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$', title='Thrust components')
 sns.lineplot(y = drone_thrust[:, 1], x = timesteps)
 sns.lineplot(y = drone_thrust[:, 2], x = timesteps)
 plt.grid()
@@ -592,21 +594,21 @@ plt.grid()
   
 
     
-![png](output-27-0.26b04d9f.png)
+![png](output-27-0.32ea7ee4.png)
     
 
   
 </div>
 
 ```python
-sns.lineplot(thrust_norm).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$')
+sns.lineplot(thrust_norm).set(xlim=(timesteps[0], timesteps[-1]), xlabel='$t$', title='Thrust norm')
 plt.grid()
 ```
 <div class="nb-output">
   
 
     
-![png](output-28-0.7964e272.png)
+![png](output-28-0.fd3d5951.png)
     
 
   
