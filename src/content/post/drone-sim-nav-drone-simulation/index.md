@@ -207,8 +207,6 @@ class Obstacle:
     x_lim: tuple[float, float]
     y_lim: tuple[float, float]
 
-
-
 ```
 
 
@@ -560,7 +558,7 @@ plt.grid()
   
 
     
-![png](output-24-0.a033f475.png)
+![png](output-24-0.4bef4ce3.png)
     
 
   
@@ -576,7 +574,7 @@ plt.grid()
   
 
     
-![png](output-25-0.d703c583.png)
+![png](output-25-0.f6d3886c.png)
     
 
   
@@ -592,7 +590,7 @@ plt.grid()
   
 
     
-![png](output-26-0.81c69140.png)
+![png](output-26-0.26b04d9f.png)
     
 
   
@@ -606,7 +604,7 @@ plt.grid()
   
 
     
-![png](output-27-0.94f28cad.png)
+![png](output-27-0.7964e272.png)
     
 
   
@@ -640,60 +638,15 @@ data.to_npz('./data.npz')
 DroneFlightScene.data_file = './data.npz'
 scene = DroneFlightScene()
 
-with tempconfig({"quality": "medium_quality", "preview": False, "disable_caching": False}):
+with tempconfig({"quality": "medium_quality", "preview": False, "disable_caching": False, "verbosity": "CRITICAL"}):
     scene = DroneFlightScene()
     scene.render()
 
 ```
-<div class="nb-output">
-  
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11/30/25 10:41:57] </span><span style="color: #008000; text-decoration-color: #008000">INFO    </span> Caching disabled.                                                 <a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/renderer/cairo_renderer.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">cairo_renderer.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/renderer/cairo_renderer.py#79" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">79</span></a>
-</pre>
+<pre><code class="language-output"></code></pre>
+<video src="/blog/drone-sim-nav-drone-simulation/assets/trajectory.5f1005c4.mp4" width=560 height=480 controls autoplay />
 
 
-  
-</div><pre><code class="language-output"></code></pre><div class="nb-output">
-  
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11/30/25 10:43:08] </span><span style="color: #008000; text-decoration-color: #008000">INFO    </span> Animation <span style="color: #008000; text-decoration-color: #008000">0</span> : Partial movie file written in                   <a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">scene_file_writer.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py#588" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">588</span></a>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #008000; text-decoration-color: #008000">'/Users/401806/Own/drone_sim_nav/blog/media/videos/720p30/par</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #008000; text-decoration-color: #008000">tial_movie_files/DroneFlightScene/uncached_00000.mp4'</span>         <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-</pre>
-
-
-  
-</div><div class="nb-output">
-  
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span><span style="color: #008000; text-decoration-color: #008000">INFO    </span> Combining to Movie file.                                      <a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">scene_file_writer.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py#739" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">739</span></a>
-</pre>
-
-
-  
-</div><div class="nb-output">
-  
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span><span style="color: #008000; text-decoration-color: #008000">INFO    </span>                                                               <a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">scene_file_writer.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene_file_writer.py#886" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">886</span></a>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #808000; text-decoration-color: #808000; font-weight: bold">File</span> ready at                                                 <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #008000; text-decoration-color: #008000">'/Users/401806/Own/drone_sim_nav/blog/media/videos/720p30/Dro</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #008000; text-decoration-color: #008000">neFlightScene.mp4'</span>                                            <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>                                                                       <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                        </span>
-</pre>
-
-
-  
-</div><div class="nb-output">
-  
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span><span style="color: #008000; text-decoration-color: #008000">INFO    </span> <span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Rendered</span> DroneFlightScene                                                 <a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">scene.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/401806/Own/drone_sim_nav/.venv/lib/python3.12/site-packages/manim/scene/scene.py#255" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">255</span></a>
-<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">                    </span>         <span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Played</span> <span style="color: #008000; text-decoration-color: #008000">1</span> <span style="color: #808000; text-decoration-color: #808000; font-weight: bold">animations</span>                                                       <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">            </span>
-</pre>
-
-
-  
-</div>
-<video src="/blog/drone-sim-nav-drone-simulation/assets/trajectory.ef42b559.mp4" width=560 height=480 controls autoplay />
 
 In the video above, we see the trajectory of the drone in blue. The green ball represents the goal and the pillars are the defined obstacles.
 We can see that our drone successfully evades the obstacles and arrives in the vicinity of the goal.
