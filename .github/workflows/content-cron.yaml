@@ -72,7 +72,7 @@ jobs:
                 git config --global url."https://$EXTERNAL_GIT_PAT:@github.com/".insteadOf "https://github.com/"
               fi
               rm -rf /tmp/content && mkdir -p /tmp/content
-              python tools/exporter/main.py --out /tmp/content
+              python -m tools.exporter.main --out /tmp/content
               ls -la /tmp/content || true
             '
 
