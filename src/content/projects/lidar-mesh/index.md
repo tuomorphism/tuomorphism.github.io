@@ -4,7 +4,7 @@ description: An end-to-end LiDAR perception pipeline capable of multi-sweep fusi
   clustering, and EKF-based tracking in real urban environments. The model separates
   static infrastructure from dynamic objects and produces clean, stable 3D reconstructions.
 tier: 1
-image: /projects/lidar-mesh-6da493cb.mp4
+image: /projects/lidar-mesh-d52906df.mp4
 date: 2025-11-30
 links:
 - title: Repo
