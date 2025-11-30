@@ -7,5 +7,6 @@ date: 2025-08-16
 links:
 - title: Repo
   url: https://github.com/tuomorphism/Minimal_surfaces
+projectId: minimal-surfaces
 ---
 

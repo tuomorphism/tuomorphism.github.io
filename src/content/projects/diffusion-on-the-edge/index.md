@@ -7,6 +7,7 @@ date: 2025-09-15
 links:
 - title: Repo
   url: https://github.com/tuomorphism/diffusion-on-the-edge
+projectId: diffusion-on-the-edge
 blog_posts:
 - title: Diffusion models - Introduction
   url: /blog/diffusion-on-the-edge-01-introduction-01-introduction

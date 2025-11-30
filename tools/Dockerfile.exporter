@@ -20,4 +20,4 @@ RUN pip install --no-cache-dir -r /site/requirements.txt
 COPY tools /site/tools
 
 # Default entrypoint: run the exporter
-ENTRYPOINT ["python", "tools/export_all.py"]
+ENTRYPOINT ["python", "-m", "tools.exporter.main"]
