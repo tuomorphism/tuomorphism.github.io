@@ -11,3 +11,6 @@ repos:
   - name: minimal-surfaces
     url: https://github.com/tuomorphism/Minimal_surfaces
     ref: master
+  - name: drone_sim_nav
+    ref: main
+    url: https://github.com/tuomorphism/drone_sim_nav
