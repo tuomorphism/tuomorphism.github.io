@@ -10,6 +10,16 @@ const posts = await fetchPosts(); // already returns normalized Post[]
 const metadata = {
   title: 'Blog'
 }
+
+const orderedPosts = posts.sort((a, b) => {
+  // First compare dates (descending)
+  const dateDiff = b.publishDate.getTime() - a.publishDate.getTime();
+  if (dateDiff !== 0) return dateDiff;
+
+  // If same date, compare title lexicographically (ascending)
+  return b.title.localeCompare(a.title);
+});
+
 ---
 
 <Layout metadata={metadata}>
@@ -24,7 +34,7 @@ const metadata = {
 
   <section>
     <div class="mx-auto max-w-4xl px-6 sm:px-6 pt-4 pb-8 sm:pt-6 sm:pb-12">
-      <BlogList posts={posts} />
+      <BlogList posts={orderedPosts} />
     </div>
   </section>
 </Layout>
