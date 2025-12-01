@@ -1,11 +1,12 @@
 ---
-title: Diffusion models - Introduction
+title: 'Diffusion on the edge - Part I: Introduction'
 publishDate: 2025-11-28
 frontSlug: diffusion-on-the-edge-01-introduction-01-introduction
+updated: '2025-12-01'
 toc_items:
 - level: 1
-  text: Diffusion models - Introduction
-  id: diffusion-models-introduction
+  text: 'Diffusion on the edge - Part I: Introduction'
+  id: diffusion-on-the-edge-part-i-introduction
 - level: 1
   text: Review of stochastic processes
   id: review-of-stochastic-processes
@@ -41,26 +42,7 @@ next:
 
 
 
-
-
-
-
-
-```python
-import scipy
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-from diffusion_on_the_edge.core.grid import TimeGrid
-from diffusion_on_the_edge.processes import OUParamsNP, OUTorchParams, OUNumpy, OUTorch
-from diffusion_on_the_edge.sde.np_backend import simulate_sde_np
-from diffusion_on_the_edge.data import generate_toy_dataset
-
-ASSETS = './assets/'
-```
-
-# Diffusion models - Introduction {#diffusion-models-introduction}
+# Diffusion on the edge - Part I: Introduction {#diffusion-on-the-edge-part-i-introduction}
 
 Welcome!
 
@@ -76,6 +58,21 @@ The steps we will take in this blog post are:
 4. Inverting the density flow
 5. Implementing a score model
 6. Generation of new samples
+
+
+```python
+import scipy
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from diffusion_on_the_edge.core.grid import TimeGrid
+from diffusion_on_the_edge.processes import OUParamsNP, OUTorchParams, OUNumpy, OUTorch
+from diffusion_on_the_edge.sde.np_backend import simulate_sde_np
+from diffusion_on_the_edge.data import generate_toy_dataset
+
+ASSETS = './assets/'
+```
 
 # Review of stochastic processes {#review-of-stochastic-processes}
 

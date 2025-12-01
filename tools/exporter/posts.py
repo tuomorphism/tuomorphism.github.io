@@ -20,7 +20,7 @@ from .config import (
     POST_OUT,
     TEMPLATE_DIR,
 )
-from .git import git_last_commit_date
+from .git import git_first_commit_date, git_last_commit_date
 from .markdown_processing import (
     add_ids_and_collect_toc_per_cell,
     extract_markdown_attachments,
@@ -39,6 +39,23 @@ from .utils import (
     _norm_text,
 )
 from .visibility import filter_and_apply_visibility
+
+def _existing_publish_and_updated(out_dir: pathlib.Path) -> tuple[Any | None, Any | None]:
+    """
+    Look at existing index.md (if any) and pull normalized publishDate/updated from it.
+    Returns (publishDate, updated) as already-normalized Python objects (date or None).
+    """
+    index_md = out_dir / "index.md"
+    if not index_md.exists():
+        return None, None
+
+    text = index_md.read_text(encoding="utf-8")
+    fm, _ = parse_frontmatter(text)
+    if not fm:
+        return None, None
+
+    fm_norm = normalize_frontmatter_dates(dict(fm))
+    return fm_norm.get("publishDate"), fm_norm.get("updated")
 
 
 def export_notebook(
@@ -59,7 +76,17 @@ def export_notebook(
 
     filter_and_apply_visibility(nb)
 
-    publish_date = git_last_commit_date(repo_dir, ipynb) or datetime.now().date()
+    # --- NEW: derive publishDate/updated in a "dev friendly" way ---
+    existing_publish, existing_updated = _existing_publish_and_updated(out_dir)
+
+    from .git import git_first_commit_date, git_last_commit_date
+
+    dev_date = git_first_commit_date(repo_dir, ipynb)
+    last_change = git_last_commit_date(repo_dir, ipynb)
+
+    publish_date = existing_publish or dev_date or datetime.now().date()
+    updated_date = existing_updated or last_change or publish_date
+    # ---------------------------------------------------------------
 
     base_dir = ipynb.parent
     toc_items: List[Dict[str, Any]] = []
@@ -128,6 +155,7 @@ def export_notebook(
             "title": title,
             "slug": slug,
             "publishDate": publish_date,
+            "updated": updated_date,
             "rel_key": rel_key,
         }
 
@@ -140,6 +168,7 @@ def export_notebook(
         "metadata": {
             "title": title,
             "publishDate": publish_date,
+            "updated": updated_date,
             "frontSlug": slug,
             "toc_items": toc_items,
         }
@@ -162,12 +191,14 @@ def export_notebook(
         fm_rendered = {
             "title": title,
             "publishDate": publish_date,
+            "updated": updated_date,
             "frontSlug": slug,
             "toc_items": toc_items,
         }
     else:
         fm_rendered.setdefault("title", title)
         fm_rendered.setdefault("publishDate", publish_date)
+        fm_rendered.setdefault("updated", updated_date)
         fm_rendered.setdefault("frontSlug", slug)
         fm_rendered.setdefault("toc_items", toc_items)
 
@@ -189,6 +220,7 @@ def export_notebook(
         "title": title,
         "slug": slug,
         "publishDate": publish_date,
+        "updated": updated_date,
         "rel_key": rel_key,
     }
 
@@ -242,9 +274,22 @@ def export_markdown(
     body = map_noncode_nonmath(body, normalize_markdown_light)
 
     title = (fm.get("title") if fm else md.stem.title())
+
+    existing_publish, existing_updated = _existing_publish_and_updated(out_dir)
+
+
+    dev_date = git_first_commit_date(repo_dir, md)
+    last_change = git_last_commit_date(repo_dir, md)
+
     publishDate = (
-        (fm.get("publishDate") if fm else git_last_commit_date(repo_dir, md))
+        (fm.get("publishDate") if fm else existing_publish)
+        or dev_date
         or datetime.now().date()
+    )
+    updatedDate = (
+        (fm.get("updated") if fm else existing_updated)
+        or last_change
+        or publishDate
     )
 
     if marker.exists():
@@ -256,14 +301,21 @@ def export_markdown(
             "title": title,
             "slug": slug,
             "publishDate": publishDate,
+            "updated": updatedDate,
             "rel_key": rel_key,
         }
 
     if not fm:
-        fm = {"title": title, "publishDate": publishDate, "frontSlug": slug}
+        fm = {
+            "title": title,
+            "publishDate": publishDate,
+            "updated": updatedDate,
+            "frontSlug": slug,
+        }
     else:
         fm.setdefault("title", title)
         fm.setdefault("publishDate", publishDate)
+        fm.setdefault("updated", updatedDate)
         fm["frontSlug"] = slug
 
     fm = normalize_frontmatter_dates(fm)
@@ -286,6 +338,7 @@ def export_markdown(
         "title": title,
         "slug": slug,
         "publishDate": publishDate,
+        "updated": updatedDate,
         "rel_key": rel_key,
     }
 

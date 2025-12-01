@@ -6,14 +6,20 @@ interface Props { link: Link }
 const { link } = Astro.props as Props;
 
 const t = (link.title ?? '').toLowerCase().trim();
+
 const isCode = ['code', 'repo', 'repository', 'source', 'git'].includes(t);
 const isDemo = ['demo', 'live', 'play', 'try', 'site'].includes(t);
+const isPdf = ['pdf', 'paper', 'thesis'].includes(t);
 
 const btn =
   'inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 transition';
 ---
-
-{isCode ? (
+{isPdf ? (
+  <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label="PDF" title="PDF" class={btn}>
+    <Icon name="lucide:file-text" class="h-4 w-4" />
+    <span class="sr-only">PDF</span>
+  </a>
+) : isCode ? (
   <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label="Source" title="Source" class={btn}>
     <Icon name="lucide:file-code-2" class="h-4 w-4" />
     <span class="sr-only">Source</span>

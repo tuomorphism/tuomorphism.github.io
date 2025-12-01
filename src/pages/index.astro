@@ -2,14 +2,26 @@
 import Layout from '~/layouts/PageLayout.astro';
 import Header from '~/components/widgets/Header.astro';
 import Content from '~/components/widgets/Content.astro';
-import { headerData } from '~/navigation'
+import { headerData } from '~/navigation';
 import { getPermalink } from '~/utils/permalinks';
 
 const metadata = { title: 'About' };
+
+const showcaseVideoHtml = `
+  <video
+    src="/videos/showcase.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+    class="mx-auto w-full rounded-lg bg-gray-500 shadow-lg aspect-[4/3] object-cover"
+  ></video>
+`;
 ---
 
 <Layout metadata={metadata}>
   <Fragment slot="announcement"></Fragment>
+
   <Fragment slot="header">
     <Header {...headerData} isSticky showToggleTheme />
   </Fragment>
@@ -32,6 +44,7 @@ const metadata = { title: 'About' };
         },
       },
     ]}
+    image={showcaseVideoHtml}
   >
     <Fragment slot="content">
       <h5 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Hi!</h5>

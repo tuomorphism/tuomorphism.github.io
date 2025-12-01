@@ -55,9 +55,13 @@ toc_items:
   text: References
   id: references
 prev:
-  title: Diffusion models - Introduction
+  title: 'Diffusion on the edge - Part I: Introduction'
   url: /blog/diffusion-on-the-edge-01-introduction-01-introduction
 ---
+
+
+
+
 
 
 
