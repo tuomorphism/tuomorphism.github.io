@@ -1,7 +1,7 @@
 ---
 title: Heart attack analysis
 description: Analysis of heart attack data and a predictive deep learning model.
-tier: 3
+tier: 2
 image: ''
 date: 2021-01-04
 links:

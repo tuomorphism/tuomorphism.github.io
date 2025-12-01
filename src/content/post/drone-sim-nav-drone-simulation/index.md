@@ -2,6 +2,7 @@
 title: Drone path simulation
 publishDate: 2025-11-30
 frontSlug: drone-sim-nav-drone-simulation
+updated: '2025-12-01'
 toc_items:
 - level: 1
   text: Drone path simulation
@@ -39,6 +40,16 @@ toc_items:
 ---
 
 
+# Drone path simulation {#drone-path-simulation}
+
+This is a simple blog post on creating a 3-dimensional aerial drone simulation. The simulation contains these parts
+
+- Underlying physics simulation
+- Simple goal-based controller with drone thrust
+- Simulated lidar scans
+- Obstacles in 3-dimensions
+
+After reading this post, we have created something to develop further into a more complete drone simulation.
 
 
 ```python
@@ -58,17 +69,6 @@ project_root = Path().resolve().parent
 sys.path.append(str(project_root))
 from src import manim_animator, simulation_data
 ```
-
-# Drone path simulation {#drone-path-simulation}
-
-This is a simple blog post on creating a 3-dimensional aerial drone simulation. The simulation contains these parts
-
-- Underlying physics simulation
-- Simple goal-based controller with drone thrust
-- Simulated lidar scans
-- Obstacles in 3-dimensions
-
-After reading this post, we have created something to develop further into a more complete drone simulation.
 
 ## Drone {#drone}
 

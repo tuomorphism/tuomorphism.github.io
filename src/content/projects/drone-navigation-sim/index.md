@@ -1,7 +1,7 @@
 ---
 title: Drone navigation sim
-description: Simulation on potential field based obstacle avoidance for an aerial
-  drone.
+description: Simulation of an aerial drone in 3 dimensions. Showcase of obstacle avoidance
+  strategy using PD controller and potential field evasion technique.
 tier: 1
 image: /projects/drone-navigation-sim-ef42b559.mp4
 date: 2025-11-30

@@ -1,7 +1,7 @@
 ---
 title: Fashion image
 description: Convolutional neural network classifier for images of fashion pieces.
-tier: 3
+tier: 2
 image: ''
 date: 2023-01-04
 links:
