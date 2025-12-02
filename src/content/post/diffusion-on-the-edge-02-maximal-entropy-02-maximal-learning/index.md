@@ -2,6 +2,7 @@
 title: 'Diffusion on the edge - Part II: Maximal manifold exploration'
 publishDate: 2025-11-28
 frontSlug: diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning
+updated: '2025-12-02'
 toc_items:
 - level: 1
   text: 'Diffusion on the edge - Part II: Maximal manifold exploration'
@@ -58,16 +59,6 @@ prev:
   title: 'Diffusion on the edge - Part I: Introduction'
   url: /blog/diffusion-on-the-edge-01-introduction-01-introduction
 ---
-
-
-
-
-
-
-
-
-
-
 
 
 # Diffusion on the edge - Part II: Maximal manifold exploration {#diffusion-on-the-edge-part-ii-maximal-manifold-exploration}
@@ -690,7 +681,7 @@ The above picture displays nicely the effect of our entropy increasing fine tuni
 
 # Conclusion {#conclusion}
 
-We have now implemented a mirror-descent style fine-tuning operation on our diffusion model. This implementation clearly has the ability to find undersampled samples and increase the resulting entropy of our
+We have now implemented a mirror-descent style fine-tuning operation on our diffusion model. This implementation clearly has the ability to find undersampled samples and increase the resulting entropy of our model.
 
 # References {#references}
 

@@ -42,6 +42,7 @@ next:
 
 
 
+
 # Diffusion on the edge - Part I: Introduction {#diffusion-on-the-edge-part-i-introduction}
 
 Welcome!
