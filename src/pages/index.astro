@@ -6,6 +6,7 @@ import { site } from '~/site';
 
 const github = site.socials.find((s) => s.label === 'GitHub')!.href;
 const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
+const selected = projects.filter((p) => p.data.featured).slice(0, 3);
 ---
 
 <BaseLayout>
@@ -17,13 +18,7 @@ const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
       </p>
       <p class="mt-4 font-sans text-base text-muted">
         <a class="link" href="/about">
-          More about me
-        </a>
-        <span class="mx-2 text-line" aria-hidden="true">
-          /
-        </span>
-        <a class="link" href="/projects">
-          Projects
+          About me and my projects
         </a>
         <span class="mx-2 text-line" aria-hidden="true">
           /
@@ -34,7 +29,29 @@ const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
       </p>
     </section>
 
-    <section class="mt-16">
+    {selected.length > 0 && (
+      <section class="mt-14">
+        <h2 class="eyebrow mb-4">Selected work</h2>
+        <ul class="space-y-3">
+          {selected.map((p) => (
+            <li class="group relative">
+              <a href={`/about#${p.id}`} class="font-semibold text-ink transition-colors group-hover:text-accent">
+                <span class="absolute inset-0" aria-hidden="true" />
+                {p.data.title}
+              </a>
+              <p class="line-clamp-1 text-[0.9375rem] text-muted">{p.data.summary}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="mt-4 text-[0.9375rem]">
+          <a class="link" href="/about">
+            All projects →
+          </a>
+        </p>
+      </section>
+    )}
+
+    <section class="mt-14">
       <h2 class="eyebrow mb-6">Writing</h2>
       <PostList posts={posts} projects={projects} />
     </section>

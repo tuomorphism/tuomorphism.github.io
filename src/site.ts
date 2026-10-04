@@ -6,7 +6,7 @@ export const site = {
   nav: [
     // Home is the list of posts; posts live under /blog.
     { label: 'Blog', href: '/', match: '/blog' },
-    { label: 'Projects', href: '/projects' },
+    // Bio and projects live on one page.
     { label: 'About', href: '/about' },
   ],
   socials: [

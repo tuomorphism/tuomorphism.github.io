@@ -38,6 +38,8 @@ export default defineConfig({
   redirects: {
     // The post list is the home page.
     '/blog': '/',
+    // Projects are part of the about page.
+    '/projects': '/about',
     '/blog/diffusion-on-the-edge-01-introduction-01-introduction': '/blog/diffusion-on-the-edge/01-introduction',
     '/blog/diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning':
       '/blog/diffusion-on-the-edge/02-maximal-learning',
