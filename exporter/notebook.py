@@ -1,12 +1,17 @@
 """Jupyter notebook -> Markdown with raw-HTML outputs.
 
-Cell visibility follows the usual Jupyter/Jupyter Book conventions:
-  tags remove-cell / remove-input / remove-output (and hide-* variants),
-  or metadata.jupyter.source_hidden / outputs_hidden.
+Cell visibility follows the Jupyter Book tag conventions:
+  remove-cell, remove-input, remove-output   leave the cell / code / output out
+  hide-input (or metadata.jupyter.source_hidden)   fold the code behind "Show code"
+  show-input                                  never fold the code
+  hide-cell, hide-output (or outputs_hidden)  treated like their remove-* versions
+Code cells without a tag are folded when long (> FOLD_LINES) or only imports/setup,
+so posts read as prose with the code a click away.
 """
 
 from __future__ import annotations
 
+import ast
 import base64
 import html
 import re
@@ -20,6 +25,7 @@ from .assets import MediaSink, rewrite_local_urls
 _ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _STYLE = re.compile(r"<style[\s\S]*?</style>", re.IGNORECASE)
 _IMAGE_TYPES = {"image/svg+xml": ".svg", "image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif"}
+FOLD_LINES = 15
 
 
 def _tags(cell) -> set[str]:
@@ -32,8 +38,58 @@ def _hidden(cell, what: str) -> bool:
     if what == "cell":
         return bool(tags & {"remove-cell", "hide-cell"})
     if what == "input":
-        return bool(tags & {"remove-input", "hide-input"}) or bool(jupyter.get("source_hidden"))
+        return "remove-input" in tags
     return bool(tags & {"remove-output", "hide-output"}) or bool(jupyter.get("outputs_hidden"))
+
+
+def _statements(source: str) -> list[ast.stmt] | None:
+    """Top-level statements, ignoring IPython magics; None if the code doesn't parse."""
+    code = "\n".join(line for line in source.splitlines() if not line.lstrip().startswith(("%", "!")))
+    try:
+        return ast.parse(code).body
+    except SyntaxError:
+        return None
+
+
+def _is_setup(stmts: list[ast.stmt] | None) -> bool:
+    """Mostly imports (plus path/constant fiddling), no definitions."""
+    if not stmts or any(isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) for s in stmts):
+        return False
+    imports = sum(isinstance(s, (ast.Import, ast.ImportFrom)) for s in stmts)
+    return imports > 0 and imports * 2 >= len(stmts)
+
+
+def _fold_label(source: str, stmts: list[ast.stmt] | None) -> str:
+    if _is_setup(stmts):
+        return "Imports and setup"
+    names = [s.name for s in stmts or [] if isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+    if names:
+        shown = ", ".join(f"<code>{html.escape(n)}</code>" for n in names[:3])
+        return f"Defines {shown}" + (f" and {len(names) - 3} more" if len(names) > 3 else "")
+    first = next((ln.strip() for ln in source.splitlines() if ln.strip() and not ln.lstrip().startswith("#")), "")
+    return f"<code>{html.escape(first if len(first) <= 60 else first[:57] + '…')}</code>"
+
+
+def _code_block(cell, source: str, language: str) -> str:
+    fence = f"```{language}\n{source}\n```"
+    tags = _tags(cell)
+    if "show-input" in tags:
+        return fence
+    stmts = _statements(source) if language == "python" else None
+    lines = source.count("\n") + 1
+    folded = (
+        "hide-input" in tags
+        or bool(cell.get("metadata", {}).get("jupyter", {}).get("source_hidden"))
+        or lines > FOLD_LINES
+        or (_is_setup(stmts) and lines > 3)  # a fold row is no shorter than a few lines of code
+    )
+    if not folded:
+        return fence
+    summary = (
+        f'<summary><span class="nb-fold-label">{_fold_label(source, stmts)}</span>'
+        f'<span class="nb-fold-meta">{lines} line{"s" if lines != 1 else ""}</span></summary>'
+    )
+    return f'<details class="nb-fold">\n{summary}\n\n{fence}\n\n</details>'
 
 
 def _pre(text: str) -> str:
@@ -77,7 +133,7 @@ def notebook_to_markdown(path: Path, repo_dir: Path, sink: MediaSink) -> tuple[d
         source = cell.source.replace("\r\n", "\n").replace("\u200b", "").strip()
 
         if cell.cell_type == "markdown":
-            if _hidden(cell, "input") or not source:
+            if _hidden(cell, "input") or "hide-input" in _tags(cell) or not source:
                 continue
             for att_name, bundle in (cell.get("attachments") or {}).items():
                 mime, b64 = next(iter(bundle.items()))
@@ -87,7 +143,7 @@ def notebook_to_markdown(path: Path, repo_dir: Path, sink: MediaSink) -> tuple[d
 
         elif cell.cell_type == "code":
             if source and not _hidden(cell, "input"):
-                blocks.append(f"```{language}\n{source}\n```")
+                blocks.append(_code_block(cell, source, language))
             if _hidden(cell, "output"):
                 continue
             rendered = [

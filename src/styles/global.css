@@ -137,7 +137,7 @@
   }
 
   /* On phones, code and outputs run edge to edge to make the most of the width. */
-  & > :is(pre, .nb-output) {
+  & > :is(pre, .nb-output, .nb-fold) {
     @apply max-sm:-mx-5 max-sm:rounded-none max-sm:border-x-0;
   }
 
@@ -187,11 +187,44 @@
     content: 'Output';
     @apply mb-2 block text-[0.7rem] font-semibold tracking-[0.08em] text-subtle uppercase;
   }
-  & :where(pre:has(+ .nb-output)) {
+  & :where(:is(pre, .nb-fold):has(+ .nb-output)) {
     @apply mb-0 rounded-b-none;
   }
-  & :where(pre + .nb-output) {
+  & :where(:is(pre, .nb-fold) + .nb-output) {
     @apply mt-0 rounded-t-none border-t-0;
+  }
+
+  /* Folded code cell: a one-line summary that expands to the code. */
+  & :where(.nb-fold) {
+    @apply my-7 overflow-hidden rounded-xl border border-line bg-sunken;
+  }
+  & :where(.nb-fold > summary) {
+    @apply flex cursor-pointer list-none items-center gap-3 px-5 py-2.5 font-sans text-[0.8125rem] text-muted transition-colors select-none hover:text-ink;
+  }
+  & :where(.nb-fold > summary)::-webkit-details-marker {
+    display: none;
+  }
+  & :where(.nb-fold > summary)::before {
+    content: '';
+    @apply size-2 shrink-0 rotate-45 border-t-[1.5px] border-r-[1.5px] border-current transition-transform;
+  }
+  & :where(.nb-fold[open] > summary)::before {
+    @apply rotate-135;
+  }
+  & :where(.nb-fold-label) {
+    @apply min-w-0 truncate;
+  }
+  & :where(.nb-fold-label code) {
+    @apply bg-transparent p-0 text-[0.95em] text-ink;
+  }
+  & :where(.nb-fold-meta) {
+    @apply ml-auto shrink-0 text-xs text-subtle;
+  }
+  & :where(.nb-fold[open] > summary) {
+    @apply border-b border-line;
+  }
+  & :where(.nb-fold > pre) {
+    @apply m-0 rounded-none border-0;
   }
   & :where(.nb-output > *) {
     @apply my-0;

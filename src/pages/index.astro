@@ -1,41 +1,48 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Button from '~/components/Button.astro';
+import PostList from '~/components/PostList.astro';
+import { getPosts, getProjects } from '~/lib/content';
+
+const LATEST = 10;
+const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
 ---
 
-<BaseLayout title="About">
-  <section class="container-page grid items-center gap-12 py-14 md:grid-cols-2 md:gap-16 md:py-24">
-    <div>
-      <h1 class="text-4xl font-bold tracking-tight text-ink sm:text-5xl">Hi! I'm Tuomas.</h1>
-      <div class="mt-6 space-y-5 font-serif text-xl leading-relaxed text-text">
-        <p>
-          I’m into mathematical modeling, spatial computing with sensor data, and machine learning; generally the
-          process of turning abstract theory into cool models and systems.
-        </p>
-        <p>
-          This site is a collection of projects and blog posts, ranging from complete systems to interesting deep-dives
-          into current research.
-        </p>
-        <p>
-          If you're interested in a more complete background, you can find it on my{' '}
-          <a class="link" href="https://www.linkedin.com/in/tuomorphism/" target="_blank" rel="noreferrer">
-            LinkedIn profile
+<BaseLayout>
+  <div class="mx-auto max-w-3xl px-5 pt-14 pb-20 sm:px-8 sm:pt-20">
+    <section class="font-serif text-xl leading-relaxed text-text">
+      <p>
+        I’m Tuomas. I write about mathematical modeling, spatial computing with sensor data, and machine learning:
+        mostly the process of turning abstract theory into models and systems that work.
+      </p>
+      <p class="mt-4 font-sans text-base text-muted">
+        <a class="link" href="/about">
+          More about me
+        </a>
+        <span class="mx-2 text-line" aria-hidden="true">
+          /
+        </span>
+        <a class="link" href="/projects">
+          Projects
+        </a>
+        <span class="mx-2 text-line" aria-hidden="true">
+          /
+        </span>
+        <a class="link" href="/rss.xml">
+          RSS
+        </a>
+      </p>
+    </section>
+
+    <section class="mt-16">
+      <h2 class="eyebrow mb-6">Writing</h2>
+      <PostList posts={posts.slice(0, LATEST)} projects={projects} />
+      {posts.length > LATEST && (
+        <p class="mt-8">
+          <a class="link" href="/blog">
+            All {posts.length} posts →
           </a>
-          .
         </p>
-      </div>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <Button href="/projects" label="Projects" icon="lucide:folder-kanban" variant="primary" />
-        <Button href="/blog" label="Blog" icon="lucide:newspaper" />
-      </div>
-    </div>
-    <video
-      src="/videos/showcase.mp4"
-      autoplay
-      muted
-      loop
-      playsinline
-      class="card aspect-[4/3] w-full object-cover shadow-lg"
-    ></video>
-  </section>
+      )}
+    </section>
+  </div>
 </BaseLayout>

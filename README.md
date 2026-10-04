@@ -50,7 +50,10 @@ A source repo can contain:
 - `assets/hero.{mp4,webm,gif,png,jpg,webp}`: cover
 - `blog/**/*.ipynb` / `blog/**/*.md`: posts, ordered by path. The first `# Heading` becomes the title, the first
   paragraph the description. Notebook metadata or Markdown frontmatter can set `title`, `description`, `publishDate`,
-  `draft`, `tags`. Cells tagged `remove-cell` / `remove-input` / `remove-output` are hidden.
+  `draft`, `tags`.
+- Notebook cell tags: `remove-cell` / `remove-input` / `remove-output` leave things out; `hide-input` folds the code
+  behind a "Show code" row and `show-input` keeps it open. Untagged code cells fold automatically when longer than 15
+  lines or when they only do imports/setup, so posts read as prose with the code a click away.
 
 Add the repo to `content/sources.yml` to include it.
 
