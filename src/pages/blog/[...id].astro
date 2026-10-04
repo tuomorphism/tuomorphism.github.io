@@ -1,0 +1,127 @@
+---
+import { getEntry, render } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Button from '~/components/Button.astro';
+import TableOfContents from '~/components/TableOfContents.astro';
+import { formatDate, getPosts, neighbours, postUrl, type Post } from '~/lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { id: post.id }, props: { post, ...neighbours(post, posts) } }));
+}
+
+interface Props {
+  post: Post;
+  prev?: Post;
+  next?: Post;
+}
+const { post, prev, next } = Astro.props;
+const { title, description, publishDate, updatedDate, source } = post.data;
+const project = post.data.project && (await getEntry(post.data.project));
+const { Content, headings, remarkPluginFrontmatter } = await render(post);
+
+const minDepth = Math.min(...headings.map((h) => h.depth));
+const toc = headings.filter((h) => h.depth < minDepth + 3);
+const showToc = toc.length > 2;
+---
+
+<BaseLayout title={title} description={description} type="article">
+  <div class="mx-auto grid max-w-[84rem] grid-cols-[minmax(0,1fr)] gap-x-10 px-5 pt-12 pb-20 sm:px-8 sm:pt-16 xl:grid-cols-[minmax(0,1fr)_14rem]">
+    <article class="min-w-0">
+      <header class="mx-auto max-w-measure border-b border-line pb-8">
+        {project && (
+          <a href={`/projects#${project.id}`} class="eyebrow transition-colors hover:text-accent">
+            {project.data.title}
+          </a>
+        )}
+        <h1 class="mt-3 text-[2rem] leading-[1.15] font-bold tracking-tight text-balance text-ink sm:text-[2.5rem]">
+          {title}
+        </h1>
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <p class="flex flex-wrap items-center gap-x-2 text-sm text-subtle">
+            <time datetime={publishDate.toISOString()}>{formatDate(publishDate)}</time>
+            {updatedDate && <span>· Updated {formatDate(updatedDate)}</span>}
+            <span>· {remarkPluginFrontmatter.minutesRead} min read</span>
+          </p>
+          {source && <Button href={source} label="View source" icon="tabler:brand-github" size="sm" />}
+        </div>
+      </header>
+
+      {showToc && (
+        <details class="card mx-auto mt-8 max-w-measure px-5 py-3 xl:hidden">
+          <summary class="cursor-pointer text-sm font-semibold text-ink">Contents</summary>
+          <div class="mt-3 mb-1">
+            <TableOfContents headings={toc} />
+          </div>
+        </details>
+      )}
+
+      <div class="post-body mx-auto mt-10 max-w-measure">
+        <Content />
+      </div>
+
+      <nav class="mx-auto mt-16 grid max-w-measure gap-4 border-t border-line pt-8 sm:grid-cols-2">
+        {prev ? (
+          <a href={postUrl(prev)} rel="prev" class="card card-interactive group p-4">
+            <span class="eyebrow flex items-center gap-1">
+              <Icon name="lucide:arrow-left" class="size-3.5" /> Previous
+            </span>
+            <span class="mt-1 block font-medium text-ink group-hover:text-accent">{prev.data.title}</span>
+          </a>
+        ) : (
+          <a href="/blog" class="card card-interactive group p-4">
+            <span class="eyebrow flex items-center gap-1">
+              <Icon name="lucide:arrow-left" class="size-3.5" /> Blog
+            </span>
+            <span class="mt-1 block font-medium text-ink group-hover:text-accent">All posts</span>
+          </a>
+        )}
+        {next && (
+          <a href={postUrl(next)} rel="next" class="card card-interactive group p-4 text-right sm:col-start-2">
+            <span class="eyebrow flex items-center justify-end gap-1">
+              Next <Icon name="lucide:arrow-right" class="size-3.5" />
+            </span>
+            <span class="mt-1 block font-medium text-ink group-hover:text-accent">{next.data.title}</span>
+          </a>
+        )}
+      </nav>
+    </article>
+
+    {showToc && (
+      <aside class="hidden xl:block">
+        <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto border-l border-line">
+          <p class="eyebrow mb-2 pl-3">On this page</p>
+          <TableOfContents headings={toc} />
+        </div>
+      </aside>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  // Display math can't line-break, so shrink equations that are wider than the column.
+  const MIN_SCALE = 0.6;
+  const equations = [...document.querySelectorAll<HTMLElement>('.post-body .katex-display')];
+
+  function fit() {
+    for (const box of equations) {
+      const math = box.firstElementChild as HTMLElement | null;
+      if (!math) continue;
+      math.style.fontSize = '';
+      const ratio = box.clientWidth / box.scrollWidth;
+      if (ratio < 1) {
+        const base = parseFloat(getComputedStyle(math).fontSize);
+        math.style.fontSize = `${base * Math.max(ratio, MIN_SCALE)}px`;
+      }
+    }
+  }
+
+  let frame = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(fit);
+  });
+  document.fonts.ready.then(fit);
+  fit();
+</script>

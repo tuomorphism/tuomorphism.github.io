@@ -1,0 +1,17 @@
+---
+import { isVideo } from '~/lib/content';
+
+/** An image or a muted, looping video, chosen by file extension. */
+interface Props {
+  src: string;
+  alt?: string;
+  class?: string;
+}
+const { src, alt = '', class: className } = Astro.props;
+---
+
+{isVideo(src) ? (
+  <video src={src} autoplay muted loop playsinline preload="metadata" class={className} aria-label={alt} />
+) : (
+  <img src={src} alt={alt} loading="lazy" class={className} />
+)}

@@ -1,0 +1,5 @@
+title: Fashion image
+summary: Convolutional neural network classifier for images of fashion pieces.
+date: 2023-01-04
+links:
+  - { label: Code, url: 'https://www.kaggle.com/code/urjalacoder/fashion-image' }

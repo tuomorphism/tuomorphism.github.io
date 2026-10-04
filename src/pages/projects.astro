@@ -1,36 +1,40 @@
 ---
-import Layout from '~/layouts/PageLayout.astro';
-import Header from '~/components/widgets/Header.astro';
-import { getCollection } from 'astro:content';
-import { headerData } from '~/navigation';
-import Hero from '~/components/widgets/Hero.astro';
-import ProjectsGrid from '~/components/projects/ProjectsGrid.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHero from '~/components/PageHero.astro';
+import ProjectCard from '~/components/ProjectCard.astro';
+import { getPosts, getProjects, seriesOf } from '~/lib/content';
 
-const projects = await getCollection('projects');
-const ordered = [...projects].sort((a, b) => {
-  if (a.data.tier !== b.data.tier) return a.data.tier - b.data.tier;
-  return a.data.title.localeCompare(b.data.title);
-});
-
-const metadata = { title: 'Projects' };
+const [projects, posts] = await Promise.all([getProjects(), getPosts()]);
+const featured = projects.filter((p) => p.data.featured);
+const others = projects.filter((p) => !p.data.featured);
 ---
 
-<Layout metadata={metadata}>
-  <Fragment slot="header"></Fragment>
-  <Header {...headerData} isSticky showToggleTheme />
-
-  <Hero
+<BaseLayout title="Projects">
+  <PageHero
     title="Projects"
     subtitle="Gallery of projects on various topics in math, computer science and statistics."
-    size="sm"
-    align="left"
-    maxW="max-w-5xl"
-    showDivider={true}
   />
 
-  <section>
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 pb-8 sm:pt-6 sm:pb-12">
-      <ProjectsGrid items={ordered} />
-    </div>
-  </section>
-</Layout>
+  <div class="container-page space-y-12 pb-20">
+    {featured.length > 0 && (
+      <section>
+        <h2 class="eyebrow mb-4">Featured</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((p) => (
+            <ProjectCard project={p} posts={seriesOf(p.id, posts)} />
+          ))}
+        </div>
+      </section>
+    )}
+    {others.length > 0 && (
+      <section>
+        <h2 class="eyebrow mb-4">More projects</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {others.map((p) => (
+            <ProjectCard project={p} posts={seriesOf(p.id, posts)} />
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

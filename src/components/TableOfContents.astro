@@ -1,0 +1,47 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+const { headings } = Astro.props;
+const minDepth = Math.min(...headings.map((h) => h.depth));
+---
+
+<ul class="toc space-y-0.5 text-[0.8125rem] leading-snug">
+  {headings.map((h) => (
+    <li style={`padding-left: ${(h.depth - minDepth) * 0.75}rem`}>
+      <a
+        href={`#${h.slug}`}
+        data-toc-link={h.slug}
+        class="-ml-px block border-l border-transparent py-1 pl-3 text-muted transition-colors hover:text-ink"
+      >
+        {h.text}
+      </a>
+    </li>
+  ))}
+</ul>
+
+<script>
+  // Highlight the section currently being read (in every TOC on the page).
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+  const targets = [...new Set(links.map((a) => a.dataset.tocLink!))]
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => el !== null);
+
+  const setActive = (id: string) => links.forEach((a) => a.classList.toggle('toc-active', a.dataset.tocLink === id));
+
+  const onScroll = () => {
+    const current = targets.filter((el) => el.getBoundingClientRect().top < 120).at(-1);
+    if (current) setActive(current.id);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+
+<style>
+  .toc :global(.toc-active) {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+</style>

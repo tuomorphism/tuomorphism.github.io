@@ -1,0 +1,5 @@
+title: Heart attack analysis
+summary: Analysis of heart attack data and a predictive deep learning model.
+date: 2021-01-04
+links:
+  - { label: Code, url: 'https://www.kaggle.com/code/urjalacoder/hearth-attack-analysis' }

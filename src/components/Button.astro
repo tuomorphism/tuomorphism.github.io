@@ -1,0 +1,50 @@
+---
+/**
+ * The one link-styled-as-a-button on the site.
+ *   primary    filled accent, the main action on a page
+ *   secondary  outlined, for everything else that looks like a button
+ *   ghost      no chrome until hovered (icon rows, inline actions)
+ * Pass `icon` alone (with `label`) for a square icon button.
+ */
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  href: string;
+  label: string;
+  icon?: string;
+  iconOnly?: boolean;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { href, label, icon, iconOnly = false, variant = 'secondary', size = 'md', class: className } = Astro.props;
+const external = /^https?:\/\//.test(href) || href.endsWith('.pdf');
+
+const variants = {
+  primary: 'bg-accent text-white border-accent hover:bg-accent-strong hover:border-accent-strong',
+  secondary: 'bg-surface text-ink border-line hover:border-subtle hover:bg-sunken',
+  ghost: 'border-transparent text-muted hover:bg-sunken hover:text-ink',
+};
+const sizes = {
+  sm: iconOnly ? 'size-8' : 'h-8 px-3 text-[0.8125rem] gap-1.5',
+  md: iconOnly ? 'size-10' : 'h-10 px-4 text-sm gap-2',
+};
+---
+
+<a
+  href={href}
+  class:list={[
+    'inline-flex shrink-0 items-center justify-center rounded-lg border font-medium whitespace-nowrap transition-colors',
+    variants[variant],
+    sizes[size],
+    className,
+  ]}
+  aria-label={iconOnly ? label : undefined}
+  title={iconOnly ? label : undefined}
+  {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
+>
+  {icon && <Icon name={icon} class={size === 'sm' ? 'size-4' : 'size-[1.125rem]'} aria-hidden="true" />}
+  {!iconOnly && label}
+  <slot />
+</a>
