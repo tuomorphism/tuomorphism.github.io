@@ -72,7 +72,7 @@
 }
 
 @utility eyebrow {
-  @apply text-xs font-semibold tracking-[0.08em] text-subtle uppercase;
+  @apply text-sm font-medium text-subtle;
 }
 
 @utility container-page {

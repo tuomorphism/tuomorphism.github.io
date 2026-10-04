@@ -1,41 +1,59 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Button from '~/components/Button.astro';
+import { site } from '~/site';
+
+const github = site.socials.find((s) => s.label === 'GitHub')!.href;
 ---
 
 <BaseLayout title="About" description="About Tuomas: mathematical modeling, spatial computing and machine learning.">
-  <section class="container-page grid items-center gap-12 py-14 md:grid-cols-2 md:gap-16 md:py-24">
-    <div>
-      <h1 class="text-4xl font-bold tracking-tight text-ink sm:text-5xl">Hi! I'm Tuomas.</h1>
-      <div class="mt-6 space-y-5 font-serif text-xl leading-relaxed text-text">
-        <p>
-          I’m into mathematical modeling, spatial computing with sensor data, and machine learning; generally the
-          process of turning abstract theory into cool models and systems.
-        </p>
-        <p>
-          This site is a collection of projects and blog posts, ranging from complete systems to interesting deep-dives
-          into current research.
-        </p>
-        <p>
-          If you're interested in a more complete background, you can find it on my{' '}
-          <a class="link" href="https://www.linkedin.com/in/tuomorphism/" target="_blank" rel="noreferrer">
-            LinkedIn profile
-          </a>
-          .
-        </p>
-      </div>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <Button href="/projects" label="Projects" icon="lucide:folder-kanban" variant="primary" />
-        <Button href="/" label="Blog" icon="lucide:newspaper" />
-      </div>
+  <div class="mx-auto max-w-3xl px-5 pt-14 pb-20 sm:px-8 sm:pt-20">
+    <h1 class="text-3xl font-bold tracking-tight text-ink">About</h1>
+
+    <div class="mt-8 space-y-5 font-serif text-xl leading-relaxed text-text">
+      <p>
+        Hi! I’m Tuomas. I’m into mathematical modeling, spatial computing with sensor data, and machine learning;
+        generally the process of turning abstract theory into cool models and systems.
+      </p>
+      <p>
+        This site is a collection of projects and blog posts, ranging from complete systems to interesting deep-dives
+        into current research.
+      </p>
+      <p>
+        If you're interested in a more complete background, you can find it on my{' '}
+        <a class="link" href="https://www.linkedin.com/in/tuomorphism/" target="_blank" rel="noreferrer">
+          LinkedIn profile
+        </a>
+        .
+      </p>
     </div>
-    <video
-      src="/videos/showcase.mp4"
-      autoplay
-      muted
-      loop
-      playsinline
-      class="card aspect-[4/3] w-full object-cover shadow-lg"
-    ></video>
-  </section>
+
+    <figure class="mt-12">
+      <video
+        src="/videos/showcase.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+        class="aspect-[4/3] w-full rounded-xl border border-line object-cover"
+      ></video>
+    </figure>
+
+    <p class="mt-12 text-muted">
+      <a class="link" href="/">
+        Writing
+      </a>
+      <span class="mx-2 text-line" aria-hidden="true">
+        /
+      </span>
+      <a class="link" href="/projects">
+        Projects
+      </a>
+      <span class="mx-2 text-line" aria-hidden="true">
+        /
+      </span>
+      <a class="link" href={github} target="_blank" rel="noreferrer">
+        GitHub
+      </a>
+    </p>
+  </div>
 </BaseLayout>
