@@ -16,6 +16,9 @@ import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
+/** Titles: a spaced hyphen becomes an en dash kept on the line before ("edge – Part I"). */
+const title = z.string().transform((s) => s.replace(/ - /g, '\u00a0– '));
+
 const linkKinds = ['repo', 'demo', 'pdf', 'notebook', 'other'] as const;
 
 function inferLinkKind(label: string, url: string): (typeof linkKinds)[number] {
@@ -55,7 +58,7 @@ const projects = defineCollection({
     generateId: projectId,
   }),
   schema: z.object({
-    title: z.string(),
+    title,
     summary: z.string(),
     /** Featured projects are shown first, with their cover media. */
     featured: z.boolean().default(false),
@@ -75,7 +78,7 @@ const posts = defineCollection({
     generateId: postId,
   }),
   schema: z.object({
-    title: z.string(),
+    title,
     description: z.string().optional(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),

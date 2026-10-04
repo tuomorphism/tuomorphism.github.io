@@ -23,7 +23,7 @@ const postsOf = (id: string) => posts.filter((p) => p.data.project?.id === id);
         </span>
         <div>
           <h3 class="text-lg font-semibold tracking-tight text-ink">{title}</h3>
-          <p class="mt-1 text-[0.9375rem] leading-relaxed text-muted">{summary}</p>
+          <p class="mt-1 text-ui text-muted">{summary}</p>
           {related.length > 0 && (
             <p class="mt-2 text-sm text-muted">
               Writing:{' '}

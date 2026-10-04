@@ -29,6 +29,13 @@
 
   --radius-card: 0.875rem;
 
+  /* Type scale additions (Tailwind's text-sm/base/lg/xl/3xl cover the rest):
+     ui = summaries and secondary text in lists/cards, excerpt = serif post excerpts. */
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.6;
+  --text-excerpt: 1.0625rem;
+  --text-excerpt--line-height: 1.65;
+
   /* Post column: one width for text, code and figures (~80 characters per line). */
   --container-measure: 48rem;
 }
@@ -73,6 +80,17 @@
 
 @utility eyebrow {
   @apply text-sm font-medium text-subtle;
+}
+
+/* Page structure: every page sits in the same centred column as post text. */
+@utility page-column {
+  @apply mx-auto w-full max-w-measure px-5 pt-14 pb-24 sm:px-8 sm:pt-20;
+}
+@utility page-title {
+  @apply text-3xl font-bold tracking-tight text-ink;
+}
+@utility section-title {
+  @apply mb-6 text-xl font-semibold tracking-tight text-ink;
 }
 
 @utility container-page {

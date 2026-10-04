@@ -24,9 +24,7 @@ const projectTitle = new Map(projects.map((p) => [p.id, p.data.title]));
               {title}
             </a>
           </h3>
-          {description && (
-            <p class="mt-1 line-clamp-2 font-serif text-[1.0625rem] leading-relaxed text-muted">{description}</p>
-          )}
+          {description && <p class="mt-1 line-clamp-2 font-serif text-excerpt text-muted">{description}</p>}
           {(project || draft) && (
             <p class="mt-2 text-sm text-subtle">
               {project && projectTitle.get(project.id)}

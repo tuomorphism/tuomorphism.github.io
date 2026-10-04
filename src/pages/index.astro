@@ -10,7 +10,7 @@ const selected = projects.filter((p) => p.data.featured).slice(0, 3);
 ---
 
 <BaseLayout>
-  <div class="mx-auto max-w-3xl px-5 pt-14 pb-20 sm:px-8 sm:pt-20">
+  <div class="page-column">
     <section class="font-serif text-xl leading-relaxed text-text">
       <p>
         I’m Tuomas. I write about mathematical modeling, spatial computing with sensor data, and machine learning:
@@ -30,20 +30,28 @@ const selected = projects.filter((p) => p.data.featured).slice(0, 3);
     </section>
 
     {selected.length > 0 && (
-      <section class="mt-14">
-        <h2 class="eyebrow mb-4">Selected work</h2>
-        <ul class="space-y-3">
+      <section class="mt-16">
+        <h2 class="section-title">Selected work</h2>
+        <ul class="space-y-4">
           {selected.map((p) => (
-            <li class="group relative">
-              <a href={`/about#${p.id}`} class="font-semibold text-ink transition-colors group-hover:text-accent">
-                <span class="absolute inset-0" aria-hidden="true" />
-                {p.data.title}
-              </a>
-              <p class="line-clamp-1 text-[0.9375rem] text-muted">{p.data.summary}</p>
+            <li class="group relative grid gap-x-8 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+              <span class="pt-0.5 text-sm text-subtle tabular-nums">
+                {p.data.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', timeZone: 'UTC' })}
+              </span>
+              <div>
+                <a
+                  href={`/about#${p.id}`}
+                  class="text-lg font-semibold tracking-tight text-ink transition-colors group-hover:text-accent"
+                >
+                  <span class="absolute inset-0" aria-hidden="true" />
+                  {p.data.title}
+                </a>
+                <p class="line-clamp-1 text-ui text-muted">{p.data.summary}</p>
+              </div>
             </li>
           ))}
         </ul>
-        <p class="mt-4 text-[0.9375rem]">
+        <p class="mt-6 text-ui sm:pl-[calc(7.5rem+2rem)]">
           <a class="link" href="/about">
             All projects →
           </a>
@@ -51,8 +59,8 @@ const selected = projects.filter((p) => p.data.featured).slice(0, 3);
       </section>
     )}
 
-    <section class="mt-14">
-      <h2 class="eyebrow mb-6">Writing</h2>
+    <section class="mt-16">
+      <h2 class="section-title">Writing</h2>
       <PostList posts={posts} projects={projects} />
     </section>
   </div>
