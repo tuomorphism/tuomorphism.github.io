@@ -1,0 +1,39 @@
+---
+import { formatDate, postUrl, type Post, type Project } from '~/lib/content';
+
+interface Props {
+  posts: Post[];
+  projects: Project[];
+}
+const { posts, projects } = Astro.props;
+const projectTitle = new Map(projects.map((p) => [p.id, p.data.title]));
+---
+
+<ol class="divide-y divide-line">
+  {posts.map((post) => {
+    const { title, description, publishDate, draft, project } = post.data;
+    return (
+      <li class="group relative grid gap-x-8 gap-y-1 py-6 first:pt-0 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+        <time datetime={publishDate.toISOString()} class="pt-1 text-sm text-subtle tabular-nums">
+          {formatDate(publishDate)}
+        </time>
+        <div>
+          <h3 class="text-lg font-semibold tracking-tight text-ink transition-colors group-hover:text-accent">
+            <a href={postUrl(post)}>
+              <span class="absolute inset-0" aria-hidden="true" />
+              {title}
+            </a>
+          </h3>
+          {description && <p class="mt-1 line-clamp-2 font-serif text-excerpt text-muted">{description}</p>}
+          {(project || draft) && (
+            <p class="mt-2 text-sm text-subtle">
+              {project && projectTitle.get(project.id)}
+              {draft && <span class="ml-2 rounded bg-amber-100 px-1.5 text-amber-800">draft</span>}
+            </p>
+          )}
+        </div>
+      </li>
+    );
+  })}
+</ol>
+{posts.length === 0 && <p class="text-muted">No posts yet.</p>}

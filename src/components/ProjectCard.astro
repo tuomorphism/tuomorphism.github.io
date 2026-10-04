@@ -1,4 +1,5 @@
 ---
+/** A featured project: cover on the left (from `sm` up), details on the right. */
 import { Icon } from 'astro-icon/components';
 import Media from './Media.astro';
 import ProjectLink from './ProjectLink.astro';
@@ -10,26 +11,31 @@ interface Props {
   posts: Post[];
 }
 const { project, posts } = Astro.props;
-const { title, summary, date, cover, featured, links } = project.data;
+const { title, summary, date, cover, links } = project.data;
 ---
 
-<article id={project.id} class="card flex h-full scroll-mt-24 flex-col overflow-hidden">
-  {featured && cover && (
-    <Media src={cover} alt={title} class="hidden aspect-[4/3] w-full border-b border-line object-cover sm:block" />
+<article
+  id={project.id}
+  class:list={['card grid scroll-mt-24 overflow-hidden', cover && 'sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]']}
+>
+  {cover && (
+    <Media src={cover} alt={title} class="hidden h-full min-h-48 w-full border-r border-line object-cover sm:block" />
   )}
 
-  <div class="flex flex-1 flex-col gap-4 p-5">
+  <div class="flex flex-col gap-3 p-5">
     <header>
-      <p class="eyebrow">{date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', timeZone: 'UTC' })}</p>
-      <h3 class="mt-1.5 text-lg font-semibold tracking-tight text-ink">{title}</h3>
-      <p class="mt-1.5 text-[0.9375rem] leading-relaxed text-muted">{summary}</p>
+      <h3 class="text-lg font-semibold tracking-tight text-ink">{title}</h3>
+      <p class="eyebrow mt-0.5">
+        {date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', timeZone: 'UTC' })}
+      </p>
+      <p class="mt-2 text-ui text-muted">{summary}</p>
     </header>
 
     {posts.length > 0 && (
-      <ul class="space-y-1 border-t border-line pt-4">
+      <ul class="space-y-1">
         {posts.map((post) => (
           <li>
-            <a href={postUrl(post)} class="group flex items-start gap-2 text-[0.9375rem] font-medium text-ink">
+            <a href={postUrl(post)} class="group flex items-start gap-2 text-ui font-medium text-ink">
               <Icon
                 name="lucide:arrow-right"
                 class="mt-[0.3rem] size-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent"

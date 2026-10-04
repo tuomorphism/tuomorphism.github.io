@@ -2,9 +2,11 @@
 import { Icon } from 'astro-icon/components';
 import Button from './Button.astro';
 import { site } from '~/site';
+import { pagePath } from '~/lib/content';
 
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+const path = pagePath(Astro.url);
+const isActive = ({ href, match }: { href: string; match?: string }) =>
+  [href, match].some((p) => p && (p === '/' ? path === '/' : path === p || path.startsWith(p + '/')));
 ---
 
 <header
@@ -18,17 +20,17 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 
     <nav aria-label="Main navigation" class="hidden md:block">
       <ul class="flex items-center gap-1 text-sm font-medium">
-        {site.nav.map(({ label, href }) => (
+        {site.nav.map((item) => (
           <li>
             <a
-              href={href}
+              href={item.href}
               class:list={[
                 'rounded-lg px-3 py-2 transition-colors',
-                isActive(href) ? 'bg-sunken text-ink' : 'text-muted hover:text-ink',
+                isActive(item) ? 'bg-sunken text-ink' : 'text-muted hover:text-ink',
               ]}
-              aria-current={isActive(href) ? 'page' : undefined}
+              aria-current={isActive(item) ? 'page' : undefined}
             >
-              {label}
+              {item.label}
             </a>
           </li>
         ))}
@@ -47,16 +49,16 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
           <Icon name="tabler:menu-2" class="size-5" />
         </summary>
         <ul class="card absolute right-0 mt-2 w-44 p-1 text-sm font-medium shadow-lg">
-          {site.nav.map(({ label, href }) => (
+          {site.nav.map((item) => (
             <li>
               <a
-                href={href}
+                href={item.href}
                 class:list={[
                   'block rounded-md px-3 py-2',
-                  isActive(href) ? 'bg-sunken text-ink' : 'text-muted hover:bg-sunken hover:text-ink',
+                  isActive(item) ? 'bg-sunken text-ink' : 'text-muted hover:bg-sunken hover:text-ink',
                 ]}
               >
-                {label}
+                {item.label}
               </a>
             </li>
           ))}

@@ -36,8 +36,10 @@ All tokens live in `src/styles/global.css` (`@theme`) and are used through Tailw
   (`accent`, `accent-strong`, `accent-soft`).
 - **Type**: Inter for interface and headings, Source Serif 4 for reading text, JetBrains Mono for code.
 - **Primitives**: `<Button>` (primary / secondary / ghost, `sm` / `md`, optional icon-only) for every button-like link;
-  `.link` for inline text links; `.card` (+ `.card-interactive`) for every boxed surface; `.eyebrow` for small labels;
-  `.container-page` for page width.
+  `.link` for inline text links; `.card` (+ `.card-interactive`) for every boxed surface; `.eyebrow` for small labels.
+- **Layout and type roles**: every page uses `.page-column` (the same 48rem column as post text), `.page-title` and
+  `.section-title`; `text-ui` for summaries in lists and cards, `text-excerpt` for serif post excerpts. Lists (posts,
+  selected work, projects) share one grid: a date column, then title and one-line description.
 - **Posts**: `.post-body` styles rendered Markdown in one ~80-character column (text, code and figures alike); code
   cells and their notebook outputs are joined together, and over-wide equations are scaled down to fit. The table of
   contents is a sticky sidebar on wide screens, collapsible above the post otherwise.
@@ -50,7 +52,10 @@ A source repo can contain:
 - `assets/hero.{mp4,webm,gif,png,jpg,webp}`: cover
 - `blog/**/*.ipynb` / `blog/**/*.md`: posts, ordered by path. The first `# Heading` becomes the title, the first
   paragraph the description. Notebook metadata or Markdown frontmatter can set `title`, `description`, `publishDate`,
-  `draft`, `tags`. Cells tagged `remove-cell` / `remove-input` / `remove-output` are hidden.
+  `draft`, `tags`.
+- Notebook cell tags: `remove-cell` / `remove-input` / `remove-output` leave things out; `hide-input` folds the code
+  behind a "Show code" row and `show-input` keeps it open. Untagged code cells fold automatically when longer than 15
+  lines or when they only do imports/setup, so posts read as prose with the code a click away.
 
 Add the repo to `content/sources.yml` to include it.
 

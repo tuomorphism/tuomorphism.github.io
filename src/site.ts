@@ -4,9 +4,10 @@ export const site = {
   description:
     'Projects and writing on mathematical modeling, spatial computing with sensor data, and machine learning.',
   nav: [
-    { label: 'About', href: '/' },
-    { label: 'Projects', href: '/projects' },
-    { label: 'Blog', href: '/blog' },
+    // Home is the list of posts; posts live under /blog.
+    { label: 'Blog', href: '/', match: '/blog' },
+    // Bio and projects live on one page.
+    { label: 'About', href: '/about' },
   ],
   socials: [
     { label: 'GitHub', icon: 'tabler:brand-github', href: 'https://github.com/tuomorphism' },

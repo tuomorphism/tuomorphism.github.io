@@ -49,17 +49,25 @@ def _take_title(body: str) -> tuple[str | None, str]:
     return m.group(1).strip(), body[: m.start()] + body[m.end() :]
 
 
-def _excerpt(body: str, limit: int = 220) -> str | None:
+def _excerpt(body: str, limit: int = 220, min_length: int = 80) -> str | None:
+    """Leading prose paragraphs (skipping greetings like "Welcome!"), as plain text."""
+    text = ""
     for para in re.split(r"\n\s*\n", body):
         p = para.strip()
         if not p or p[0] in "#<!|>-*`$[" or p.startswith("```"):
+            if text:
+                break
             continue
         p = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", p)
         p = re.sub(r"[*_`]", "", re.sub(r"\s+", " ", p))
-        if len(p) > limit:
-            p = p[:limit].rsplit(" ", 1)[0].rstrip(",.;:") + "…"
-        return p
-    return None
+        text = f"{text} {p}".strip()
+        if len(text) >= min_length:
+            break
+    if len(text) < min_length:
+        text = text if len(text.split()) > 3 else ""
+    if len(text) > limit:
+        text = text[:limit].rsplit(" ", 1)[0].rstrip(",.;:") + "…"
+    return text or None
 
 
 def export_post(
