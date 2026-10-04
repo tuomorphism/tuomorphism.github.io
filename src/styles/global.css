@@ -1,0 +1,240 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* ==========================================================================
+   Design tokens
+   Every colour, font and radius used on the site comes from here; Tailwind
+   exposes them as utilities (text-ink, bg-surface, border-line, font-serif …).
+   ========================================================================== */
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Neutrals: ink (headings) > text (body) > muted (secondary) > subtle (meta) */
+  --color-ink: #15171c;
+  --color-text: #2c3038;
+  --color-muted: #5b616d;
+  --color-subtle: #868c97;
+  --color-line: #e3e3de;
+  --color-page: #fafaf7;
+  --color-surface: #ffffff;
+  --color-sunken: #f3f3ef;
+
+  /* Single accent, used for links, focus rings and primary actions */
+  --color-accent: #1d4ed8;
+  --color-accent-strong: #1e3a8a;
+  --color-accent-soft: #e7edfb;
+
+  --radius-card: 0.875rem;
+
+  /* Post column: one width for text, code and figures (~80 characters per line). */
+  --container-measure: 48rem;
+}
+
+@layer base {
+  html {
+    @apply bg-page font-sans text-text antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    @apply bg-accent-soft text-ink;
+  }
+  :focus-visible {
+    @apply rounded-sm outline-2 outline-offset-2 outline-accent;
+  }
+  :target {
+    scroll-margin-top: 6rem;
+  }
+}
+
+/* ==========================================================================
+   Primitives (see also src/components/Button.astro)
+   ========================================================================== */
+
+@utility link {
+  @apply text-accent underline decoration-accent/30 decoration-1 underline-offset-[3px] transition-colors;
+  &:hover {
+    @apply text-accent-strong decoration-accent;
+  }
+}
+
+@utility card {
+  @apply rounded-(--radius-card) border border-line bg-surface shadow-xs;
+}
+
+@utility card-interactive {
+  @apply transition-[box-shadow,border-color];
+  &:hover {
+    @apply border-[color-mix(in_oklab,var(--color-line),var(--color-ink)_15%)] shadow-md;
+  }
+}
+
+@utility eyebrow {
+  @apply text-xs font-semibold tracking-[0.08em] text-subtle uppercase;
+}
+
+@utility container-page {
+  @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+}
+
+/* ==========================================================================
+   Long-form content (blog posts)
+   ========================================================================== */
+
+@utility post-body {
+  @apply prose max-w-none;
+
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-counters: var(--color-subtle);
+  --tw-prose-bullets: var(--color-subtle);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-quotes: var(--color-muted);
+  --tw-prose-quote-borders: var(--color-accent-soft);
+  --tw-prose-captions: var(--color-subtle);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-th-borders: var(--color-line);
+  --tw-prose-td-borders: var(--color-line);
+
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  line-height: 1.75;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  hanging-punctuation: first;
+
+  /* Headings: sans, tight, generous space above to separate sections. */
+  & :where(h1, h2, h3, h4) {
+    font-family: var(--font-sans);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  & :where(h1) {
+    @apply mt-16 mb-5 text-[1.75rem] leading-tight font-bold;
+  }
+  & :where(h2) {
+    @apply mt-14 mb-4 text-[1.4rem] leading-snug font-semibold;
+  }
+  & :where(h3) {
+    @apply mt-10 mb-3 text-[1.15rem] font-semibold;
+  }
+  & :where(h4) {
+    @apply mt-8 mb-2 text-base font-semibold;
+  }
+  & :where(h1, h2, h3, h4) a {
+    @apply font-[inherit] text-inherit no-underline;
+  }
+  & :where(h1, h2, h3, h4) a:hover::after {
+    content: '#';
+    @apply ml-2 font-normal text-subtle;
+  }
+  & > :first-child {
+    @apply mt-0;
+  }
+
+  /* On phones, code and outputs run edge to edge to make the most of the width. */
+  & > :is(pre, .nb-output) {
+    @apply max-sm:-mx-5 max-sm:rounded-none max-sm:border-x-0;
+  }
+
+  & :where(p, li) {
+    text-wrap: pretty;
+  }
+  & :where(a):not(:where(h1, h2, h3, h4) a) {
+    @apply font-normal underline decoration-accent/30 decoration-1 underline-offset-[3px];
+  }
+  & :where(a):not(:where(h1, h2, h3, h4) a):hover {
+    @apply decoration-accent;
+  }
+
+  & :where(blockquote) {
+    @apply border-l-4 font-normal not-italic;
+  }
+  & :where(blockquote p)::before,
+  & :where(blockquote p)::after {
+    content: none;
+  }
+
+  /* Inline code */
+  & :where(:not(pre) > code) {
+    @apply rounded-md bg-sunken px-[0.35em] py-[0.1em] font-mono text-[0.8em] font-normal;
+  }
+  & :where(:not(pre) > code)::before,
+  & :where(:not(pre) > code)::after {
+    content: none;
+  }
+
+  & :where(pre) {
+    @apply my-7 rounded-xl border border-line px-5 py-4 font-mono text-[0.8rem] leading-[1.7];
+    background-color: var(--color-sunken) !important; /* override Shiki's inline theme background */
+    tab-size: 4;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+  & :where(pre code) {
+    @apply font-mono;
+  }
+
+  /* Notebook output follows directly under the cell that produced it. */
+  & :where(.nb-output) {
+    @apply my-7 overflow-x-auto rounded-xl border border-line bg-surface px-5 py-4 font-sans text-[0.875rem] leading-relaxed;
+  }
+  & :where(.nb-output)::before {
+    content: 'Output';
+    @apply mb-2 block text-[0.7rem] font-semibold tracking-[0.08em] text-subtle uppercase;
+  }
+  & :where(pre:has(+ .nb-output)) {
+    @apply mb-0 rounded-b-none;
+  }
+  & :where(pre + .nb-output) {
+    @apply mt-0 rounded-t-none border-t-0;
+  }
+  & :where(.nb-output > *) {
+    @apply my-0;
+  }
+  & :where(.nb-output > * + *) {
+    @apply mt-3;
+  }
+  & :where(.nb-output pre.nb-text) {
+    @apply mx-0 my-0 rounded-none border-0 p-0 text-[0.78rem] text-text;
+    background: transparent !important;
+  }
+  & :where(.nb-output img) {
+    @apply mx-auto my-0 rounded-md shadow-none;
+  }
+
+  /* Media */
+  & :where(img, video) {
+    @apply mx-auto my-8 h-auto max-w-full rounded-lg;
+  }
+  & :where(figure figcaption) {
+    @apply text-center font-sans text-sm;
+  }
+
+  /* Tables: compact sans, scroll on overflow */
+  & :where(table) {
+    @apply block overflow-x-auto font-sans text-[0.875rem];
+  }
+  & :where(thead th) {
+    @apply font-semibold text-ink;
+  }
+
+  /* Math */
+  & :where(.katex) {
+    font-size: 1.05em;
+  }
+  /* Over-wide equations are scaled down to fit (see the post page script);
+     scrolling is only a last resort, without a visible scrollbar. */
+  & :where(.katex-display) {
+    @apply my-6 overflow-x-auto overflow-y-hidden py-1;
+    scrollbar-width: none;
+  }
+
+  & :where(hr) {
+    @apply my-12;
+  }
+}

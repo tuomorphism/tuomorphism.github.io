@@ -1,0 +1,19 @@
+---
+import Button from './Button.astro';
+import type { Project } from '~/lib/content';
+
+interface Props {
+  link: Project['data']['links'][number];
+}
+const { link } = Astro.props;
+
+const icons: Record<string, string> = {
+  repo: 'tabler:brand-github',
+  pdf: 'lucide:file-text',
+  notebook: 'lucide:notebook-text',
+  demo: 'lucide:play',
+};
+const icon = link.url.includes('kaggle.com') ? 'fa6-brands:kaggle' : (icons[link.kind] ?? 'lucide:external-link');
+---
+
+<Button href={link.url} label={link.label} icon={icon} size="sm" />

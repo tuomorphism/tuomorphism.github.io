@@ -1,8 +1,17 @@
-name: Deploy site to Github Pages.
+name: Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  # Pull requests are built (exporter + Astro) but not deployed.
+  pull_request:
+  # Nightly, to pick up changes in the source repos (content/sources.yml).
+  schedule:
+    - cron: '30 0 * * *'
+  # Lets a source repo trigger a rebuild right after it changes:
+  #   gh api repos/tuomorphism/tuomorphism.github.io/dispatches -f event_type=content-updated
+  repository_dispatch:
+    types: [content-updated]
   workflow_dispatch:
 
 permissions:
@@ -11,20 +20,44 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: withastro/action@v2
+
+      - uses: actions/setup-python@v5
         with:
-          node-version: 20
-          package-manager: npm
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: exporter/requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Export content from source repos
+        env:
+          # Optional: fine-grained PAT with read access, needed only for private source repos.
+          GH_CONTENT_TOKEN: ${{ secrets.EXTERNAL_GIT_PAT }}
+        run: |
+          pip install -r exporter/requirements.txt
+          python -m exporter
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

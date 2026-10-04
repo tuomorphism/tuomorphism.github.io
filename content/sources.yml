@@ -1,0 +1,37 @@
+# Repositories the exporter (exporter/) pulls projects and posts from.
+#
+# Each source becomes one project. In the source repo:
+#   project.yml       title, description, tier (1 = featured), date, links
+#   assets/hero.*     cover image or video (mp4/webm/gif/png/jpg/webp)
+#   blog/**/*.ipynb   posts (also *.md); assets resolved relative to each file
+#
+# Per-source keys:
+#   id        project id; posts are served at /blog/<id>/<post>
+#   repo      GitHub "owner/name"
+#   ref       branch (default: main)
+#   project   overrides merged over the repo's project.yml
+#   posts     per-post overrides keyed by post slug (e.g. publishDate, title, draft)
+sources:
+  - id: diffusion-on-the-edge
+    repo: tuomorphism/diffusion-on-the-edge
+    posts:
+      01-introduction: { publishDate: 2025-11-28 }
+      02-maximal-learning: { publishDate: 2025-11-28 }
+
+  - id: drone-navigation-sim
+    repo: tuomorphism/drone_sim_nav
+    posts:
+      drone-simulation: { publishDate: 2025-11-30 }
+
+  - id: lidar-mesh
+    repo: tuomorphism/mesh-lidar
+
+  - id: mandelbrot-multithread
+    repo: tuomorphism/mandelbrot-multithread
+
+  - id: minimal-surfaces
+    repo: tuomorphism/Minimal_surfaces
+    ref: master
+
+  - id: visual-odometry-uav
+    repo: tuomorphism/autonomous-drone-nav

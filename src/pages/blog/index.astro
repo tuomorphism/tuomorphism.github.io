@@ -1,40 +1,24 @@
 ---
-import Layout from '~/layouts/PageLayout.astro';
-import Hero from '~/components/widgets/Hero.astro';
-import BlogList from '~/components/blog/List.astro';
-import { fetchPosts } from '~/utils/blog';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageHero from '~/components/PageHero.astro';
+import PostCard from '~/components/PostCard.astro';
+import { getPosts, getProjects } from '~/lib/content';
 
-export const prerender = true;
-
-const posts = await fetchPosts(); // already returns normalized Post[]
-const metadata = {
-  title: 'Blog'
-}
-
-const orderedPosts = posts.sort((a, b) => {
-  // First compare dates (descending)
-  const dateDiff = b.publishDate.getTime() - a.publishDate.getTime();
-  if (dateDiff !== 0) return dateDiff;
-
-  // If same date, compare title lexicographically (ascending)
-  return b.title.localeCompare(a.title);
-});
-
+const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
+const projectById = new Map(projects.map((p) => [p.id, p]));
 ---
 
-<Layout metadata={metadata}>
-  <Hero
-    title="Blog"
-    subtitle="Blog posts, some related to projects, some standalone thoughts and ideas."
-    align="left"
-    size="sm"
-    maxW="max-w-5xl"
-    showDivider={true}
-  />
+<BaseLayout title="Blog">
+  <PageHero title="Blog" subtitle="Blog posts, some related to projects, some standalone thoughts and ideas." />
 
-  <section>
-    <div class="mx-auto max-w-4xl px-6 sm:px-6 pt-4 pb-8 sm:pt-6 sm:pb-12">
-      <BlogList posts={orderedPosts} />
-    </div>
-  </section>
-</Layout>
+  <div class="container-page pb-20">
+    <ul class="max-w-3xl space-y-4">
+      {posts.map((post) => (
+        <li>
+          <PostCard post={post} project={post.data.project && projectById.get(post.data.project.id)} />
+        </li>
+      ))}
+      {posts.length === 0 && <li class="text-muted">No posts yet.</li>}
+    </ul>
+  </div>
+</BaseLayout>

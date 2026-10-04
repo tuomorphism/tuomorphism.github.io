@@ -1,104 +1,44 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { defineConfig } from 'astro/config';
-
+import { unified } from '@astrojs/markdown-remark';
 import sitemap from '@astrojs/sitemap';
-import tailwind from '@astrojs/tailwind';
-import mdx from '@astrojs/mdx';
-import partytown from '@astrojs/partytown';
+import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
-import compress from 'astro-compress';
 
-import astrowind from './vendor/integration';
-
-import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import remarkHeadingId from 'remark-heading-id';
-
 import rehypeRaw from 'rehype-raw';
-import rehypeSlug from 'rehype-slug';
 import rehypeKatex from 'rehype-katex';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
-import {
-  readingTimeRemarkPlugin,
-  responsiveTablesRehypePlugin,
-  lazyImagesRehypePlugin,
-} from './src/utils/frontmatter';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const hasExternalScripts = false;
-const whenExternalScripts = (items = []) =>
-  hasExternalScripts ? (Array.isArray(items) ? items.map((i) => i()) : [items()]) : [];
+import { remarkReadingTime } from './src/lib/remark-reading-time';
 
 export default defineConfig({
-  output: 'static',
+  site: 'https://tuomorphism.github.io',
+  trailingSlash: 'never',
 
-  integrations: [
-    tailwind({ applyBaseStyles: false }),
-    sitemap(),
-    mdx(),
-    icon({
-      include: {
-        tabler: ['*'],
-        'flat-color-icons': [
-          'template',
-          'gallery',
-          'approval',
-          'document',
-          'advertising',
-          'currency-exchange',
-          'voice-presentation',
-          'business-contact',
-          'database',
-        ],
-      },
-    }),
-    ...whenExternalScripts(() =>
-      partytown({ config: { forward: ['dataLayer.push'] } })
-    ),
-    compress({
-      CSS: true,
-      HTML: { 'html-minifier-terser': { removeAttributeQuotes: false } },
-      Image: false,
-      JavaScript: true,
-      SVG: false,
-      Logger: 1,
-    }),
-    astrowind({ config: './src/config.yaml' }),
-  ],
-
-  image: { domains: ['cdn.pixabay.com'] },
+  integrations: [sitemap(), icon()],
 
   markdown: {
-    remarkPlugins: [
-      readingTimeRemarkPlugin,
-      remarkGfm,
-      remarkMath,
-      remarkHeadingId, // supports # Title {#id}
-    ],
-    rehypePlugins: [
-      // Parse raw HTML into the tree before other rehype plugins run
-      [rehypeRaw, { passThrough: ['mdxJsxTextElement', 'mdxJsxFlowElement'] }],
+    processor: unified({
+      remarkPlugins: [remarkMath, remarkReadingTime],
+      rehypePlugins: [
+        // Notebook exports contain raw HTML (outputs, videos); parse it into the tree.
+        rehypeRaw,
+        rehypeKatex,
+        [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+      ],
+    }),
+    shikiConfig: { theme: 'github-light' },
+  },
 
-      // Your custom/utility plugins (list separately, not nested in one array)
-      responsiveTablesRehypePlugin,
-      lazyImagesRehypePlugin,
-
-      // Math rendering
-      rehypeKatex,
-
-      // Slug + autolink (rehypeSlug first)
-      rehypeSlug,
-      [rehypeAutolinkHeadings, { behavior: 'wrap' }],
-    ],
+  // Post URLs used by the previous exporter.
+  redirects: {
+    '/blog/diffusion-on-the-edge-01-introduction-01-introduction': '/blog/diffusion-on-the-edge/01-introduction',
+    '/blog/diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning':
+      '/blog/diffusion-on-the-edge/02-maximal-learning',
+    '/blog/drone-sim-nav-drone-simulation': '/blog/drone-navigation-sim/drone-simulation',
   },
 
   vite: {
-    resolve: {
-      alias: { '~': path.resolve(__dirname, './src') },
-    },
+    plugins: [tailwindcss()],
   },
 });

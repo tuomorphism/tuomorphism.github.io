@@ -1,0 +1,82 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from './Button.astro';
+import { site } from '~/site';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+---
+
+<header
+  id="header"
+  class="sticky top-0 z-40 w-full border-b border-transparent transition-[background-color,border-color]"
+>
+  <div class="container-page flex h-16 items-center justify-between gap-4">
+    <a href="/" class="text-lg font-bold tracking-tight text-ink">
+      {site.name}
+    </a>
+
+    <nav aria-label="Main navigation" class="hidden md:block">
+      <ul class="flex items-center gap-1 text-sm font-medium">
+        {site.nav.map(({ label, href }) => (
+          <li>
+            <a
+              href={href}
+              class:list={[
+                'rounded-lg px-3 py-2 transition-colors',
+                isActive(href) ? 'bg-sunken text-ink' : 'text-muted hover:text-ink',
+              ]}
+              aria-current={isActive(href) ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-0.5">
+      {site.socials.map((s) => (
+        <Button href={s.href} label={s.label} icon={s.icon} iconOnly variant="ghost" />
+      ))}
+      <details class="relative ml-1 md:hidden">
+        <summary
+          class="flex size-10 cursor-pointer list-none items-center justify-center rounded-lg text-muted hover:bg-sunken hover:text-ink [&::-webkit-details-marker]:hidden"
+          aria-label="Menu"
+        >
+          <Icon name="tabler:menu-2" class="size-5" />
+        </summary>
+        <ul class="card absolute right-0 mt-2 w-44 p-1 text-sm font-medium shadow-lg">
+          {site.nav.map(({ label, href }) => (
+            <li>
+              <a
+                href={href}
+                class:list={[
+                  'block rounded-md px-3 py-2',
+                  isActive(href) ? 'bg-sunken text-ink' : 'text-muted hover:bg-sunken hover:text-ink',
+                ]}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style>
+  #header.scrolled {
+    background: color-mix(in oklab, var(--color-page) 85%, transparent);
+    backdrop-filter: blur(12px);
+    border-color: var(--color-line);
+  }
+</style>
+
+<script>
+  const header = document.getElementById('header')!;
+  const update = () => header.classList.toggle('scrolled', window.scrollY > 8);
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+</script>

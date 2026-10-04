@@ -1,0 +1,5 @@
+title: Bachelor's Thesis
+summary: Thesis on recent developments in out-of-distribution detection for neural networks.
+date: 2020-12-16
+links:
+  - { label: PDF, url: /pdf/bachelor_thesis.pdf }
