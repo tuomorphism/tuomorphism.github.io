@@ -10,12 +10,16 @@ import rehypeKatex from 'rehype-katex';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
 import { remarkReadingTime } from './src/lib/remark-reading-time';
+import { pagesDirIndex } from './src/lib/pages-dir-index';
 
 export default defineConfig({
   site: 'https://tuomorphism.github.io',
   trailingSlash: 'never',
+  // Emit /projects.html rather than /projects/index.html: GitHub Pages would otherwise
+  // 301-redirect every link to its trailing-slash form.
+  build: { format: 'file' },
 
-  integrations: [sitemap(), icon()],
+  integrations: [sitemap(), icon(), pagesDirIndex()],
 
   markdown: {
     processor: unified({
