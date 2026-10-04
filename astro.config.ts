@@ -34,8 +34,10 @@ export default defineConfig({
     shikiConfig: { theme: 'github-light' },
   },
 
-  // Post URLs used by the previous exporter.
+  // Old URLs: the former blog index and post URLs from the previous exporter.
   redirects: {
+    // The post list is the home page.
+    '/blog': '/',
     '/blog/diffusion-on-the-edge-01-introduction-01-introduction': '/blog/diffusion-on-the-edge/01-introduction',
     '/blog/diffusion-on-the-edge-02-maximal-entropy-02-maximal-learning':
       '/blog/diffusion-on-the-edge/02-maximal-learning',

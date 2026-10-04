@@ -4,7 +4,8 @@ export const site = {
   description:
     'Projects and writing on mathematical modeling, spatial computing with sensor data, and machine learning.',
   nav: [
-    { label: 'Blog', href: '/blog' },
+    // Home is the list of posts; posts live under /blog.
+    { label: 'Blog', href: '/', match: '/blog' },
     { label: 'Projects', href: '/projects' },
     { label: 'About', href: '/about' },
   ],

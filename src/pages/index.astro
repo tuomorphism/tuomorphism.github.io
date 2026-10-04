@@ -2,8 +2,9 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import PostList from '~/components/PostList.astro';
 import { getPosts, getProjects } from '~/lib/content';
+import { site } from '~/site';
 
-const LATEST = 10;
+const github = site.socials.find((s) => s.label === 'GitHub')!.href;
 const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
 ---
 
@@ -27,22 +28,15 @@ const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
         <span class="mx-2 text-line" aria-hidden="true">
           /
         </span>
-        <a class="link" href="/rss.xml">
-          RSS
+        <a class="link" href={github} target="_blank" rel="noreferrer">
+          GitHub
         </a>
       </p>
     </section>
 
     <section class="mt-16">
       <h2 class="eyebrow mb-6">Writing</h2>
-      <PostList posts={posts.slice(0, LATEST)} projects={projects} />
-      {posts.length > LATEST && (
-        <p class="mt-8">
-          <a class="link" href="/blog">
-            All {posts.length} posts →
-          </a>
-        </p>
-      )}
+      <PostList posts={posts} projects={projects} />
     </section>
   </div>
 </BaseLayout>

@@ -46,3 +46,6 @@ export const isVideo = (url: string) => /\.(mp4|webm)$/i.test(url);
 
 export const formatDate = (d: Date) =>
   d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+/** The page's public path: with `build.format: 'file'` Astro reports `/about.html` and `/index.html` during builds. */
+export const pagePath = (url: URL) => url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '') || '/';
